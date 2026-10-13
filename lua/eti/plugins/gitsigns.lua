@@ -12,6 +12,9 @@ return {
       -- Navigation
       map("n", "]h", function() gs.nav_hunk("next") end, "Next Hunk")
       map("n", "[h", function() gs.nav_hunk("prev") end, "Prev Hunk")
+      -- shift+[ / shift+] too; normal mode only, so d} / v} keep their paragraph motion
+      map("n", "}", function() gs.nav_hunk("next") end, "Next Hunk")
+      map("n", "{", function() gs.nav_hunk("prev") end, "Prev Hunk")
 
       -- Actions
       map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")
