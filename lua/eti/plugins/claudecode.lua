@@ -111,7 +111,7 @@ return {
             term_normal = false, -- let Esc / Esc Esc reach Claude (cancel, rewind); <C-\><C-n> still works
             claude_hide = { "<C-q>", function(self) self:hide() end, mode = "t", desc = "Hide Claude" },
             -- <C-\><C-n> gets eaten by vim-tmux-navigator's tmux binding, so navigate directly
-            -- (into nvim splits or out to tmux panes; wezterm maps Cmd+arrows to these).
+            -- (into nvim splits or out to tmux panes; ghostty maps Cmd+arrows to these).
             -- Flag set after the jump: left while typing, so come back typing.
             claude_left = { "<C-h>", function(self) navigate(self, "Left") end, mode = "t", desc = "Go to left window" },
             claude_down = { "<C-j>", function(self) navigate(self, "Down") end, mode = "t", desc = "Go to lower window" },

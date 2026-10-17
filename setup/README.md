@@ -14,9 +14,9 @@ the `brew bundle` step.
 
 1. Installs the Xcode command line tools and Homebrew if they're missing.
 2. Installs everything in `Brewfile` (16 formulas, 2 casks) — just what neovim,
-   wezterm and the dotfiles need: neovim, git, lazygit, ripgrep, fd, eza, node,
+   ghostty and the dotfiles need: neovim, git, lazygit, ripgrep, fd, eza, node,
    go, tree-sitter, tmux, fzf, zoxide, git-delta, powerlevel10k,
-   zsh-autosuggestions, zsh-syntax-highlighting, the symbols nerd font and wezterm.
+   zsh-autosuggestions, zsh-syntax-highlighting, the symbols nerd font and ghostty.
 3. Symlinks the dotfiles in `dotfiles/` into your home folder, backing up
    anything already there into `~/.dotfiles-backup/<date>/`.
 4. Adds an `[include]` of `dotfiles/gitconfig` to the top of `~/.gitconfig`,
@@ -39,7 +39,7 @@ ones, and `git config --global` writes there, never into this repo.
 | `dotfiles/zshrc` | `~/.zshrc` |
 | `dotfiles/p10k.zsh` | `~/.p10k.zsh` (powerlevel10k prompt) |
 | `dotfiles/tmux.conf` | `~/.tmux.conf` |
-| `dotfiles/wezterm.lua` | `~/.wezterm.lua` |
+| `dotfiles/ghostty/` | `~/.config/ghostty/` (terminal config + the Neon theme) |
 | `dotfiles/gitconfig` | included from `~/.gitconfig` |
 | `dotfiles/tmux-cht.sh` | `~/.tmux-cht.sh` (prefix + i cheat sheet) |
 | `dotfiles/claude-settings.json` | `~/.claude/settings.json` (Claude Code settings, including the sounds it plays when it's done) |

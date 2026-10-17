@@ -11,6 +11,11 @@ return {
       watch_for_changes = true,
       keymaps = {
         ["q"] = { "actions.close", mode = "n" },
+        -- <C-h>/<C-l> are window navigation (Cmd+arrows in ghostty), not split/refresh
+        ["<C-h>"] = false,
+        ["<C-l>"] = false,
+        ["<C-x>"] = { "actions.select", opts = { horizontal = true } },
+        ["R"] = "actions.refresh",
         -- mv/cp: dd/yy here, p in the side pane, then <leader>w.
         ["g|"] = {
           desc = "Open this dir in a side pane (for mv/cp)",

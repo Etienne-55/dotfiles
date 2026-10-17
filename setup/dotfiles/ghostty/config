@@ -1,0 +1,114 @@
+# Ghostty config, linked to ~/.config/ghostty by setup/bootstrap.sh
+# check it with: ghostty +validate-config
+
+# ------------------------------------------------------------------ colors
+# themes/Neon, next to this file; same base colors as nvim (lua/eti/core/palette.lua)
+theme = Neon
+# read theme hex values as Display P3: more saturated on the MacBook's P3 screen
+window-colorspace = display-p3
+# no image: the window is frosted glass over the macOS desktop wallpaper
+
+# -------------------------------------------------------------------- font
+font-family = JetBrains Mono
+# icons: fallbacks for nerd font glyphs (e.g. the tmux RAM icon U+EFC5)
+font-family = MesloLGS Nerd Font Mono
+font-family = Symbols Nerd Font Mono
+font-size = 19
+adjust-cell-height = 10%
+
+# ------------------------------------------------------------------ window
+# no title bar, still resizable; tmux windows act as tabs
+macos-titlebar-style = hidden
+maximize = true
+# 80% opaque + native macOS 26 liquid glass
+background-opacity = 0.8
+background-blur = macos-glass-regular
+# fullscreen stays on the current desktop, so the wallpaper still shows through;
+# native macOS fullscreen moves to its own space with black behind the window
+macos-non-native-fullscreen = true
+window-padding-x = 16
+window-padding-y = 12,8
+window-padding-balance = false
+cursor-style = block
+cursor-style-blink = true
+# keep the block cursor in the shell too (shell integration would make it a bar)
+shell-integration-features = no-cursor
+
+# left Option is Alt (nvim <M-Up>/<M-Down>); right Option still types accents
+macos-option-as-alt = left
+
+# ---------------------------------------------------------------- keybinds
+# Cmd+key runs a tmux prefix binding (sends C-b then the key), so the tmux.conf
+# binds stay the source of truth. These replace ghostty's own Cmd binds
+# (splits, tabs, font size), which tmux makes redundant.
+
+# Cmd+arrows send Ctrl+h/j/k/l: vim-tmux-navigator moves across nvim splits and tmux panes
+keybind = super+arrow_left=text:\x08
+keybind = super+arrow_down=text:\x0a
+keybind = super+arrow_up=text:\x0b
+keybind = super+arrow_right=text:\x0c
+# Cmd+Shift+arrows resize the tmux pane
+keybind = super+shift+arrow_left=text:\x02H
+keybind = super+shift+arrow_down=text:\x02J
+keybind = super+shift+arrow_up=text:\x02K
+keybind = super+shift+arrow_right=text:\x02L
+
+# panes (replaces font size on Cmd -/=; Ctrl -/= zoom the font)
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+equal=increase_font_size:1
+keybind = ctrl+zero=reset_font_size
+# split, new pane below
+keybind = super+minus=text:\x02-
+# Cmd+ split, new pane to the right
+keybind = super+equal=text:\x02%
+keybind = super+shift+equal=text:\x02%
+# delete pane, no confirm
+keybind = super+d=text:\x02x
+# nvim in a new window
+keybind = super+z=text:\x02v
+# zoom pane (toggle)
+keybind = super+backspace=text:\x02z
+# copy mode (scroll / search)
+keybind = super+bracket_left=text:\x02[
+
+# windows (tmux windows act as tabs)
+# a s d sit next to the z x c v edit keys, which keep their usual meaning
+# new window
+keybind = super+s=text:\x02c
+# next / previous window
+keybind = super+a=text:\x02n
+keybind = super+shift+a=text:\x02N
+# delete window, no confirm
+keybind = super+shift+d=text:\x02X
+# pick a window/session from a tree
+keybind = super+w=text:\x02w
+# rename window
+keybind = super+comma=text:\x02,
+
+# popups / tools
+# claude chat
+keybind = super+p=text:\x02p
+# gaufre
+keybind = super+e=text:\x02e
+# cht.sh
+keybind = super+i=text:\x02i
+# hex cheat sheet (Cmd+Space is Spotlight)
+keybind = super+slash=text:\x02\x20
+
+# Cmd+r reloads both the ghostty and tmux configs
+keybind = super+r=reload_config
+keybind = chain=text:\x02r
+
+# Cmd+1..9 jump to tmux window N (base-index is 1 in tmux.conf)
+keybind = super+digit_1=text:\x021
+keybind = super+digit_2=text:\x022
+keybind = super+digit_3=text:\x023
+keybind = super+digit_4=text:\x024
+keybind = super+digit_5=text:\x025
+keybind = super+digit_6=text:\x026
+keybind = super+digit_7=text:\x027
+keybind = super+digit_8=text:\x028
+keybind = super+digit_9=text:\x029
+
+# Hide the mouse pointer as soon as you type; it comes back when you move the mouse
+mouse-hide-while-typing = true

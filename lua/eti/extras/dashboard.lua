@@ -25,7 +25,7 @@ local titles = {
   --   [[                                                                                                   ]],
   -- },
   red = {
-    color = "#e5484d",
+    accent = "red",
     [[                                                     ]],
     [[  ███▄    █ ▓█████  ▒█████   ██▒   █▓ ██▓ ███▄ ▄███▓ ]],
     [[  ██ ▀█   █ ▓█   ▀ ▒██▒  ██▒▓██░   █▒▓██▒▓██▒▀█▀ ██▒ ]],
@@ -45,7 +45,7 @@ local titles = {
   --   [[                     ]],
   -- },
   purple = {
-    color = "#a371f7",
+    accent = "purple",
     [[                                       ]],
     [[    ▄   ▄███▄   ████▄     ▄   ▄█ █▀▄▀█ ]],
     [[     █  █▀   ▀  █   █      █  ██ █ █ █ ]],
@@ -57,7 +57,7 @@ local titles = {
     [[                                       ]],
   },
   elite = {
-    color = "#46a758", -- plant green
+    accent = "green", -- plant green
     [[                                   ]],
     [[  ▐ ▄ ▄▄▄ .       ▌ ▐·▪  • ▌ ▄ ·.  ]],
     [[ •█▌▐█▀▄.▀·▪     ▪█·█▌██ ·██ ▐███▪ ]],
@@ -67,7 +67,7 @@ local titles = {
     [[                                   ]],
   },
   isometric = {
-    color = "#00f0ff", -- neon cyan
+    accent = "cyan",
     [[                                                                                   ]],
     [[     /\__\         /\  \         /\  \         /\__\          ___        /\__\     ]],
     [[    /::|  |       /::\  \       /::\  \       /:/  /         /\  \      /::|  |    ]],
@@ -84,7 +84,7 @@ local titles = {
 }
 -- same dripping art as red, in honey instead of blood
 titles.honey = vim.deepcopy(titles.red)
-titles.honey.color = "#e9a23b"
+titles.honey.accent = "orange"
 
 -- header rows without the blank padding ones (sections handle spacing)
 local function logo_lines(title)
@@ -316,8 +316,9 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
+-- each header's `accent` names a color of the palette (eti.core.palette)
 local function logo_hl()
-  local color = logo and logo.title.color
+  local color = logo and require("eti.core.palette")[logo.title.accent]
   vim.api.nvim_set_hl(0, "DashboardLogo", color and { fg = color } or { link = "SnacksDashboardHeader" })
 end
 vim.api.nvim_create_autocmd("ColorScheme", { callback = logo_hl })

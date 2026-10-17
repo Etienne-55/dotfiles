@@ -1,3 +1,44 @@
+# ghostty's ghost (+boo): in the first shell after ghostty starts, and again after 5
+# minutes idle at the prompt. It needs 100+ columns, so the font goes 3 steps down
+# (like Ctrl+- x3) through ghostty's AppleScript, then back to normal after q.
+# Above the instant prompt: it's interactive.
+if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
+  _boo() {
+    local term='focused terminal of selected tab of front window'
+    osascript -e "tell application \"Ghostty\" to perform action \"decrease_font_size:3\" on $term" >/dev/null 2>&1 || return
+    sleep 0.3 # let the window re-layout before boo measures it
+    ghostty +boo
+    osascript -e "tell application \"Ghostty\" to perform action \"reset_font_size\" on $term" >/dev/null 2>&1
+  }
+
+  () {
+    # walk up to the ghostty process: one marker per ghostty launch
+    local pid=$$ comm
+    while (( pid > 1 )); do
+      comm=$(ps -o comm= -p $pid) || return
+      [[ ${comm:t} == ghostty ]] && break
+      pid=$(ps -o ppid= -p $pid) || return
+      pid=${pid// /}
+    done
+    (( pid > 1 )) || return
+    local mark=${TMPDIR:-/tmp}/ghostty-boo-$pid
+    [[ -e $mark ]] && return
+    : > $mark
+    _boo
+    clear
+  }
+
+  # TMOUT only counts while the prompt waits for a key, never while nvim or another
+  # command runs. The trap must exist before TMOUT is set: without one, zsh exits
+  # on timeout.
+  TRAPALRM() {
+    zle && zle -I
+    _boo
+    zle && zle clear-screen
+  }
+  TMOUT=300
+fi
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -14,7 +55,61 @@ source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
+# `git push` on the command line glows in a moving rainbow. A background ticker
+# (zle -F on a pipe that prints every 80ms) shifts the colors while the line
+# matches; it stops when the line changes or runs. Hooked after the syntax
+# highlighter so the rainbow paints over it.
+_rainbow_colors=(ff5f5f ff9f43 ffd93d a8e05f 4ade80 2dd4bf 38bdf8 60a5fa 818cf8 a78bfa e879f9 f472b6)
+typeset -gi _rainbow_frame=0 _rainbow_fd=0
+
+_rainbow_stop() {
+  (( _rainbow_fd )) || return
+  zle -F $_rainbow_fd
+  exec {_rainbow_fd}<&-
+  _rainbow_fd=0
+}
+
+_rainbow_paint() {
+  setopt localoptions extendedglob
+  region_highlight=( "${(@)region_highlight:#*memo=rainbow*}" )
+  if [[ $BUFFER != [[:space:]]#git[[:space:]]##push([[:space:]]*|) ]]; then
+    _rainbow_stop
+    return 0
+  fi
+  local i n=${#_rainbow_colors}
+  for (( i = 0; i < ${#BUFFER}; i++ )); do
+    region_highlight+=( "$i $((i + 1)) fg=#${_rainbow_colors[(i - _rainbow_frame + n) % n + 1]},bold, memo=rainbow" )
+  done
+  (( _rainbow_fd )) && return 0
+  exec {_rainbow_fd}< <(while sleep 0.08; do print; done)
+  zle -F -w $_rainbow_fd _rainbow_tick
+}
+
+_rainbow_tick() {
+  read -u $_rainbow_fd || { _rainbow_stop; return }
+  (( _rainbow_frame = (_rainbow_frame + 1) % ${#_rainbow_colors} ))
+  _rainbow_paint
+  zle -R
+}
+
+zle -N _rainbow_tick
+zle -N _rainbow_paint
+zle -N _rainbow_finish _rainbow_stop
+autoload -Uz add-zle-hook-widget
+add-zle-hook-widget zle-line-pre-redraw _rainbow_paint
+add-zle-hook-widget zle-line-finish _rainbow_finish
+
 alias vim="nvim"
+
+# after <space>gw moved nvim into another worktree, the shell follows it on exit
+nvim() {
+  local cwd_file=$(mktemp)
+  NVIM_CWD_FILE=$cwd_file command nvim "$@"
+  local code=$? dir=$(<"$cwd_file")
+  rm -f "$cwd_file"
+  [[ -n $dir && -d $dir ]] && cd "$dir"
+  return $code
+}
 
 # plain `tmux` always attaches to session 0 (creates it if missing) instead of opening a new session
 tmux() {
@@ -42,6 +137,13 @@ alias gc='nvim "+Pick commits"'
 alias gm='nvim "+Pick my_commits"'
 alias gn='nvim "+Pick my_last_commit"'
 
+# worktrees, <cr> opens the dashboard in the picked one; the shell follows it on
+# exit (same as <space>gw in nvim)
+gw() {
+  git rev-parse --git-dir >/dev/null || return
+  nvim "+Pick worktrees"
+}
+
 # bare `fd` opens the nvim directory picker (same as <space>fd);
 # `fd <args>` still runs the real fd binary
 fd() {
@@ -56,6 +158,9 @@ fd() {
 alias pd='pbpaste | nvim -'
 
 alias ls="eza --color=always --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
+# eza colors: calm truecolor trio (muted teal folders, soft peach source files, lavender-grey plain files)
+# fixed across Ghostty themes; the remaining ANSI codes follow the theme (Neon or TokyoNight)
+export EZA_COLORS="di=1;38;2;126;184;186:sc=38;2;217;160;122:fi=38;2;179;168;204:ex=1;32:ln=3;38;2;179;168;204:or=31:bu=1;38;2;179;168;204:im=35:vi=35:mu=35:lo=35:co=31:tm=90:cm=90:ga=32:gm=36:gd=31:gv=35:gt=35:gi=90:gc=1;31:xx=90"
 
 eval "$(zoxide init zsh)"
 
@@ -84,3 +189,5 @@ export PATH=$PATH:$HOME/go/bin
 # Load Angular CLI autocompletion.
 command -v ng >/dev/null && source <(ng completion script)
 export PATH="$HOME/.local/bin:$PATH"
+export PUPPETEER_EXECUTABLE_PATH="$HOME/.cache/chromium/mac_arm-1022525/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+export PUPPETEER_SKIP_DOWNLOAD=1

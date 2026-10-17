@@ -5,55 +5,30 @@ return {
     local lualine = require("lualine")
     local lazy_status = require("lazy.status") -- to configure lazy pending updates count
 
-    local colors = {
-      blue = "#65D1FF",
-      green = "#3EFFDC",
-      violet = "#FF61EF",
-      yellow = "#FFDA7B",
-      red = "#FF4A4A",
-      fg = "#c3ccdc",
-      bg = "#112638",
-      inactive_bg = "#2c3043",
-      semilightgray = "#a0a8b7",
-    }
-
-    local my_lualine_theme = {
-      normal = {
-        a = { bg = colors.blue, fg = colors.bg, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-      },
-      insert = {
-        a = { bg = colors.green, fg = colors.bg, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-      },
-      visual = {
-        a = { bg = colors.violet, fg = colors.bg, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-      },
-      command = {
-        a = { bg = colors.yellow, fg = colors.bg, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-      },
-      replace = {
-        a = { bg = colors.red, fg = colors.bg, gui = "bold" },
-        b = { bg = colors.bg, fg = colors.fg },
-        c = { bg = colors.bg, fg = colors.fg },
-      },
+    local p = require("eti.core.palette")
+    local function mode(color)
+      return {
+        a = { bg = color, fg = p.bg_statusline, gui = "bold" },
+        b = { bg = p.bg_statusline, fg = p.fg },
+        c = { bg = p.bg_statusline, fg = p.fg },
+      }
+    end
+    local theme = {
+      normal = mode(p.blue),
+      insert = mode(p.green),
+      visual = mode(p.magenta),
+      command = mode(p.yellow),
+      replace = mode(p.red),
       inactive = {
-        a = { bg = colors.inactive_bg, fg = colors.semilightgray, gui = "bold" },
-        b = { bg = colors.inactive_bg, fg = colors.semilightgray },
-        c = { bg = colors.inactive_bg, fg = colors.semilightgray },
+        a = { bg = p.bg_dark, fg = p.dark5, gui = "bold" },
+        b = { bg = p.bg_dark, fg = p.dark5 },
+        c = { bg = p.bg_dark, fg = p.dark5 },
       },
     }
 
-    -- configure lualine with modified theme
-    lualine.setup({
+    local opts = {
       options = {
-        theme = my_lualine_theme,
+        theme = theme,
       },
       sections = {
         -- filename first; the branch comes after it, truncated (tmux shows the full one)
@@ -78,19 +53,20 @@ return {
             cond = function()
               return vim.fn.reg_recording() ~= ""
             end,
-            color = { fg = colors.red, gui = "bold" },
+            color = { fg = p.red, gui = "bold" },
           },
           {
             lazy_status.updates,
             cond = lazy_status.has_updates,
-            color = { fg = "#ff9e64" },
+            color = { fg = p.orange },
           },
           { "encoding" },
           { "fileformat" },
           { "filetype" },
         },
       },
-    })
+    }
+    lualine.setup(opts)
 
     -- lualine doesn't refresh on these by itself
     vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {

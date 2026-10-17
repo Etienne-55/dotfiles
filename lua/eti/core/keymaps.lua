@@ -37,6 +37,22 @@ end
 -- search: keep the match centered; <Esc> clears the highlight
 keymap.set("n", "n", "nzz")
 keymap.set("n", "N", "Nzz")
+-- same after a / or ? search, only from normal mode: in `c/foo<CR>` or <C-o>/ from
+-- insert mode the zz would be typed into the buffer
+vim.api.nvim_create_autocmd("CmdlineLeave", {
+  group = vim.api.nvim_create_augroup("eti_search_center", { clear = true }),
+  pattern = { "/", "?" },
+  callback = function()
+    if vim.v.event.abort then
+      return
+    end
+    vim.schedule(function()
+      if vim.fn.mode() == "n" then
+        vim.cmd("normal! zz")
+      end
+    end)
+  end,
+})
 keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlighting" })
 
 -- replace the word under the cursor (or the selection) in the whole file: edit the replacement, <CR> to apply

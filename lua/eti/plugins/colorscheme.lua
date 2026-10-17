@@ -2,41 +2,36 @@ return {
   "folke/tokyonight.nvim",
   priority = 1000,
   config = function()
+    local p = require("eti.core.palette")
     local transparent = true
 
-    local bg = "#011628"
-    local bg_dark = "#011423"
-    local bg_highlight = "#143652"
-    local bg_search = "#0A64AC"
-    local bg_visual = "#275378"
-    local fg = "#CBE0F0"
-    local fg_dark = "#B4D0E9"
-    local fg_gutter = "#627E97"
-    local border = "#547998"
+    -- the palette as a custom tokyonight style, so tokyonight derives
+    -- diff/visual/terminal colors from it (internal table, not a setup option)
+    require("tokyonight.colors").styles.neon = function()
+      return vim.deepcopy(p)
+    end
 
     require("tokyonight").setup({
-      style = "night",
+      style = "neon",
       transparent = transparent,
       styles = {
         sidebars = transparent and "transparent" or "dark",
         floats = transparent and "transparent" or "dark",
       },
       on_colors = function(colors)
-        colors.bg = bg
-        colors.bg_dark = transparent and colors.none or bg_dark
-        colors.bg_float = transparent and colors.none or bg_dark
-        colors.bg_highlight = bg_highlight
-        colors.bg_popup = bg_dark
-        colors.bg_search = bg_search
-        colors.bg_sidebar = transparent and colors.none or bg_dark
-        colors.bg_statusline = transparent and colors.none or bg_dark
-        colors.bg_visual = bg_visual
-        colors.border = border
-        colors.fg = fg
-        colors.fg_dark = fg_dark
-        colors.fg_float = fg
-        colors.fg_gutter = fg_gutter
-        colors.fg_sidebar = fg_dark
+        colors.border_highlight = p.border
+        colors.border = p.fg_gutter
+        colors.bg_visual = p.bg_visual
+      end,
+      on_highlights = function(hl, c)
+        hl.TelescopePromptBorder = { fg = p.border_prompt, bg = c.bg_float }
+        hl.TelescopePromptTitle = { fg = p.border_prompt, bg = c.bg_float }
+        hl.TelescopeSelection = { fg = c.fg, bg = c.bg_visual, bold = true }
+        -- relative numbers: fg_gutter is too dark to read on the glass
+        hl.LineNr = { fg = p.dark5 }
+        hl.LineNrAbove = { fg = p.dark5 }
+        hl.LineNrBelow = { fg = p.dark5 }
+        hl.CursorLineNr = { fg = p.border_prompt, bold = true }
       end,
     })
 

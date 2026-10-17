@@ -182,9 +182,10 @@ return {
       end)
     end
 
-    -- pickers of this file that `:Pick` can open, besides the builtins
+    -- pickers `:Pick` can open, besides the builtins
     local own_pickers = {
       directory = find_directory,
+      worktrees = require("eti.extras.worktrees").pick,
       commits = function(from_shell)
         commits({}, from_shell)
       end,
@@ -198,13 +199,12 @@ return {
 
     -- entry point for the shell aliases: `nvim "+Pick find_files"`
     vim.api.nvim_create_user_command("Pick", function(o)
-      -- launched from the shell on the empty startup buffer: black behind the
-      -- picker, until a file is opened in that window
+      -- launched from the shell on the empty startup buffer: nothing behind the
+      -- picker but the terminal's own background, until a file is opened in that window
       local win, buf = vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
       if vim.api.nvim_buf_get_name(buf) == "" and not vim.bo[buf].modified then
-        vim.api.nvim_set_hl(0, "PickBackdrop", { bg = "#000000", fg = "#000000" })
         local blank = {
-          winhighlight = "Normal:PickBackdrop,NormalNC:PickBackdrop,EndOfBuffer:PickBackdrop",
+          fillchars = "eob: ", -- no ~ lines
           number = false,
           relativenumber = false,
           cursorline = false,
@@ -279,5 +279,8 @@ return {
     end, { desc = "Files of my last commit" })
     keymap.set("n", "<leader>gb", "<cmd>Telescope git_bcommits<cr>", { desc = "Browse buffer commits with diff preview" })
     keymap.set("n", "<leader>gB", "<cmd>Telescope git_branches<cr>", { desc = "Browse git branches" })
+    keymap.set("n", "<leader>gw", function()
+      require("eti.extras.worktrees").pick()
+    end, { desc = "Switch git worktree" })
   end,
 }

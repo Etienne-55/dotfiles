@@ -31,5 +31,5 @@ brew "zsh-autosuggestions"
 # Fish shell like syntax highlighting for zsh
 brew "zsh-syntax-highlighting"
 cask "font-symbols-only-nerd-font"
-# GPU-accelerated cross-platform terminal emulator and multiplexer
-cask "wezterm"
+# Fast, native, feature-rich terminal emulator
+cask "ghostty"
