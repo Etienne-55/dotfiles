@@ -1,10 +1,14 @@
+# dotfiles
+
+neovim, zsh, tmux, ghostty, git and Claude Code config for macOS, one folder per tool.
+
 # Quick setup for a new mac
 
 ## On the new machine
 
 ```bash
-git clone <this-repo> ~/.config/nvim
-~/.config/nvim/setup/bootstrap.sh
+git clone <this-repo> ~/dotfiles
+~/dotfiles/bootstrap.sh
 ```
 
 That's it. The script asks for your password once (Homebrew) and takes a while on
@@ -17,9 +21,9 @@ the `brew bundle` step.
    ghostty and the dotfiles need: neovim, git, lazygit, ripgrep, fd, eza, node,
    go, tree-sitter, tmux, fzf, zoxide, git-delta, powerlevel10k,
    zsh-autosuggestions, zsh-syntax-highlighting, the symbols nerd font and ghostty.
-3. Symlinks the dotfiles in `dotfiles/` into your home folder, backing up
+3. Symlinks each tool's folder/files (table below) into your home folder, backing up
    anything already there into `~/.dotfiles-backup/<date>/`.
-4. Adds an `[include]` of `dotfiles/gitconfig` to the top of `~/.gitconfig`,
+4. Adds an `[include]` of `git/gitconfig` to the top of `~/.gitconfig`,
    keeping everything already in it.
 5. Installs tmux's plugin manager and your tmux plugins.
 6. Installs pokemon-colorscripts (the random Pokémon on the neovim dashboard).
@@ -36,15 +40,18 @@ ones, and `git config --global` writes there, never into this repo.
 
 | File | Goes to |
 |---|---|
-| `dotfiles/zshrc` | `~/.zshrc` |
-| `dotfiles/p10k.zsh` | `~/.p10k.zsh` (powerlevel10k prompt) |
-| `dotfiles/tmux.conf` | `~/.tmux.conf` |
-| `dotfiles/ghostty/` | `~/.config/ghostty/` (terminal config + the Neon theme) |
-| `dotfiles/gitconfig` | included from `~/.gitconfig` |
-| `dotfiles/tmux-cht.sh` | `~/.tmux-cht.sh` (prefix + i cheat sheet) |
-| `dotfiles/claude-settings.json` | `~/.claude/settings.json` (Claude Code settings, including the sounds it plays when it's done) |
+| `nvim/` | `~/.config/nvim/` |
+| `zsh/zshrc` | `~/.zshrc` |
+| `zsh/p10k.zsh` | `~/.p10k.zsh` (powerlevel10k prompt) |
+| `tmux/tmux.conf` | `~/.tmux.conf` |
+| `tmux/tmux-cht.sh` (+ `-languages`, `-command`) | `~/.tmux-cht.sh` (prefix + i cheat sheet) |
+| `ghostty/` | `~/.config/ghostty/` (terminal config + the Neon theme) |
+| `git/gitconfig` | included from `~/.gitconfig` |
+| `claude/settings.json` | `~/.claude/settings.json` (Claude Code settings, including the sounds it plays when it's done) |
+| `claude/chat.md` | `~/.claude-chat/CLAUDE.md` (the prefix + p claude popup) |
+| `Brewfile` | `brew bundle`; `update-brewfile.sh` refreshes it from this mac |
 
 
 
 The tmux popups prefix + e (gaufre) and prefix + Space (hex) run the binaries in
-`../tools/` straight from the repo, so they need no install step.
+`tools/` straight from `~/dotfiles`, so they need no install step.

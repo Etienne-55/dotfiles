@@ -42,9 +42,9 @@ func List(w io.Writer, dir string) error {
 	return tw.Flush()
 }
 
-// ConfigDir picks the neovim config to read: the one given, else the one
-// this binary lives in (it is built into <config>/tools/hex), else
-// $XDG_CONFIG_HOME/nvim or ~/.config/nvim.
+// ConfigDir picks the neovim config to read: the one given, else the one of
+// the dotfiles repo this binary lives in (it is built into <repo>/tools/hex,
+// the config is <repo>/nvim), else $XDG_CONFIG_HOME/nvim or ~/.config/nvim.
 func ConfigDir(given string) string {
 	if given != "" {
 		if abs, err := filepath.Abs(given); err == nil {
@@ -54,7 +54,7 @@ func ConfigDir(given string) string {
 	}
 	if exe, err := os.Executable(); err == nil {
 		if exe, err = filepath.EvalSymlinks(exe); err == nil {
-			dir := filepath.Dir(filepath.Dir(filepath.Dir(exe)))
+			dir := filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(exe))), "nvim")
 			if _, err := os.Stat(filepath.Join(dir, "init.lua")); err == nil {
 				return dir
 			}

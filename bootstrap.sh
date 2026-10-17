@@ -3,14 +3,16 @@
 # Safe to run more than once - existing files are backed up, nothing is deleted.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DOTFILES="$REPO_DIR/setup/dotfiles"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m !!\033[0m %s\n' "$*"; }
 
 [ "$(uname -s)" = "Darwin" ] || { echo "This script is for macOS."; exit 1; }
+# tmux.conf runs the popup tools from ~/dotfiles/tools; and run from ~/.config/nvim
+# (the old layout), linking nvim would move this very repo into the backup folder
+[ "$REPO_DIR" = "$HOME/dotfiles" ] || { echo "Clone this repo to ~/dotfiles (it is at $REPO_DIR)."; exit 1; }
 
 # ---------------------------------------------------------------- xcode tools
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -27,13 +29,13 @@ if ! command -v brew >/dev/null 2>&1; then
 fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-log "Installing everything in setup/Brewfile (this is the long part)"
-brew bundle --file="$REPO_DIR/setup/Brewfile"
+log "Installing everything in Brewfile (this is the long part)"
+brew bundle --file="$REPO_DIR/Brewfile"
 
 # ------------------------------------------------------------------ dotfiles
 # symlinked, so editing ~/.zshrc edits the file in this repo
 link() {
-  src="$DOTFILES/$1"
+  src="$REPO_DIR/$1"
   dest="$2"
   [ -e "$src" ] || { warn "missing in repo: $1"; return; }
   if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
@@ -50,28 +52,29 @@ link() {
 }
 
 log "Linking dotfiles"
-link zshrc       "$HOME/.zshrc"
-link p10k.zsh    "$HOME/.p10k.zsh"
-link tmux.conf   "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-link ghostty     "$HOME/.config/ghostty"
-link tmux-cht.sh "$HOME/.tmux-cht.sh"
-link tmux-cht-languages "$HOME/.tmux-cht-languages"
-link tmux-cht-command   "$HOME/.tmux-cht-command"
+link nvim            "$HOME/.config/nvim"
+link zsh/zshrc       "$HOME/.zshrc"
+link zsh/p10k.zsh    "$HOME/.p10k.zsh"
+link tmux/tmux.conf  "$HOME/.tmux.conf"
+link tmux/tmux-cht.sh "$HOME/.tmux-cht.sh"
+link tmux/tmux-cht-languages "$HOME/.tmux-cht-languages"
+link tmux/tmux-cht-command   "$HOME/.tmux-cht-command"
+link ghostty         "$HOME/.config/ghostty"
 # real dir (not a symlink into this repo) so claude doesn't think it's in a git project
 mkdir -p "$HOME/.claude-chat"
-link claude-chat.md "$HOME/.claude-chat/CLAUDE.md"
+link claude/chat.md "$HOME/.claude-chat/CLAUDE.md"
 # claude code settings, including the sounds it plays when it's done
 mkdir -p "$HOME/.claude"
-link claude-settings.json "$HOME/.claude/settings.json"
+link claude/settings.json "$HOME/.claude/settings.json"
 
 # ----------------------------------------------------------------------- git
 # Not a symlink: ~/.gitconfig stays a real file for this machine's own settings
-# (identity, core.hooksPath, git-lfs, ...) and pulls in dotfiles/gitconfig with an
+# (identity, core.hooksPath, git-lfs, ...) and pulls in git/gitconfig with an
 # [include] at the top, so whatever is set below it wins. Re-running never replaces
 # it, and `git config --global` writes land there instead of in this repo.
 include_gitconfig() {
-  src="$DOTFILES/gitconfig"
+  src="$REPO_DIR/git/gitconfig"
   dest="$HOME/.gitconfig"
   if [ ! -L "$dest" ] && git config --file "$dest" --type=path --get-all include.path 2>/dev/null | grep -xF "$src" >/dev/null; then
     log "already included: $src"
@@ -115,18 +118,14 @@ mkdir -p "$HOME/.local/bin"
 ln -sf "$POKE/pokemon-colorscripts.py" "$HOME/.local/bin/pokemon-colorscripts"
 
 # ------------------------------------------------------------------ neovim
-if [ "$REPO_DIR" != "$HOME/.config/nvim" ]; then
-  warn "This repo is at $REPO_DIR but neovim reads ~/.config/nvim - clone it there instead."
-else
-  log "Installing neovim plugins"
-  nvim --headless "+Lazy! sync" +qa
+log "Installing neovim plugins"
+nvim --headless "+Lazy! sync" +qa
 
-  log "Installing language servers and formatters (a few minutes)"
-  nvim --headless \
-    -c 'autocmd User MasonToolsUpdateCompleted quitall' \
-    -c 'lua vim.defer_fn(function() vim.cmd("cquit 1") end, 300000)' \
-    -c 'MasonToolsInstall' || warn "run :Mason inside neovim to check"
-fi
+log "Installing language servers and formatters (a few minutes)"
+nvim --headless \
+  -c 'autocmd User MasonToolsUpdateCompleted quitall' \
+  -c 'lua vim.defer_fn(function() vim.cmd("cquit 1") end, 300000)' \
+  -c 'MasonToolsInstall' || warn "run :Mason inside neovim to check"
 
 # -------------------------------------------------------------------- done
 cat <<'EOF'

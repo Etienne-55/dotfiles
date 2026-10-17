@@ -1,6 +1,6 @@
 -- Neon: dark neon purple, toned down (softer, less saturated accents).
 -- Shared by tokyonight (as a custom style), lualine and the dashboard; the Ghostty
--- theme setup/dotfiles/ghostty/themes/Neon uses the same base colors.
+-- theme ghostty/themes/Neon (in the dotfiles repo) uses the same base colors.
 return {
   bg = "#06030B",
   bg_dark = "#050209",

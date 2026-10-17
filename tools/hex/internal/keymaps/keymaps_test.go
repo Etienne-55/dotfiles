@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const fixture = "../../testdata/nvim"
+const fixture = "../../testdata/dotfiles/nvim"
 
 // find returns the entry bound to keys (as written in the config) in modes.
 func find(t *testing.T, entries []Entry, keys, modes string) Entry {
@@ -92,7 +92,7 @@ func TestParseNvim(t *testing.T) {
 }
 
 func TestParseTmux(t *testing.T) {
-	entries, err := ParseTmux(filepath.Join(fixture, "setup/dotfiles/tmux.conf"), "tmux.conf")
+	entries, err := ParseTmux(filepath.Join(fixture, "../tmux/tmux.conf"), "tmux.conf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestParseTmux(t *testing.T) {
 }
 
 func TestParseShell(t *testing.T) {
-	entries, err := ParseShell(filepath.Join(fixture, "setup/dotfiles/zshrc"), "zshrc")
+	entries, err := ParseShell(filepath.Join(fixture, "../zsh/zshrc"), "zshrc")
 	if err != nil {
 		t.Fatal(err)
 	}

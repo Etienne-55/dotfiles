@@ -13,12 +13,12 @@ import (
 
 func newTestModel(t *testing.T, width, height int) Model {
 	t.Helper()
-	// no ~/.tmux.conf or ~/.zshrc there: the fixture's setup/dotfiles are read
+	// no ~/.tmux.conf or ~/.zshrc there: the fixture's tmux/ and zsh/ are read
 	home, original := t.TempDir(), keymaps.HomeDir
 	keymaps.HomeDir = func() (string, error) { return home, nil }
 	t.Cleanup(func() { keymaps.HomeDir = original })
 
-	m := NewModel("../../testdata/nvim", true)
+	m := NewModel("../../testdata/dotfiles/nvim", true)
 	return send(m, tea.WindowSizeMsg{Width: width, Height: height})
 }
 

@@ -1,8 +1,8 @@
-# Ghostty config, linked to ~/.config/ghostty by setup/bootstrap.sh
+# Ghostty config, linked to ~/.config/ghostty by bootstrap.sh
 # check it with: ghostty +validate-config
 
 # ------------------------------------------------------------------ colors
-# themes/Neon, next to this file; same base colors as nvim (lua/eti/core/palette.lua)
+# themes/Neon, next to this file; same base colors as nvim (nvim/lua/eti/core/palette.lua)
 theme = Neon
 # read theme hex values as Display P3: more saturated on the MacBook's P3 screen
 window-colorspace = display-p3

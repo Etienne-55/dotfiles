@@ -10,7 +10,7 @@ import (
 
 func main() {
 	popup := flag.Bool("popup", false, "run inside a tmux popup: drop Hex's own frame for the popup's")
-	config := flag.String("config", "", "neovim config to read (default: the one this binary is in, else ~/.config/nvim)")
+	config := flag.String("config", "", "neovim config to read (default: the dotfiles repo this binary is in, else ~/.config/nvim)")
 	list := flag.Bool("list", false, "print every binding and exit")
 	flag.Parse()
 
