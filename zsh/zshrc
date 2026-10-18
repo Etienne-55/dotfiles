@@ -1,9 +1,14 @@
 # ghostty's ghost (+boo): in the first shell after ghostty starts, and again after 5
-# minutes idle at the prompt. It needs 100+ columns, so the font goes 3 steps down
-# (like Ctrl+- x3) through ghostty's AppleScript, then back to normal after q.
+# minutes idle at the prompt. It needs 100+ columns: in a narrower window the font goes
+# 3 steps down (like Ctrl+- x3) through ghostty's AppleScript, then back to normal after q.
 # Above the instant prompt: it's interactive.
 if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
   _boo() {
+    # wide enough already: no font change, so no zoom back after q
+    if (( ${$(stty size </dev/tty)[2]} >= 100 )); then
+      ghostty +boo
+      return
+    fi
     local term='focused terminal of selected tab of front window'
     osascript -e "tell application \"Ghostty\" to perform action \"decrease_font_size:3\" on $term" >/dev/null 2>&1 || return
     sleep 0.3 # let the window re-layout before boo measures it
@@ -127,6 +132,23 @@ alias lg='lazygit'
 alias ld='lazydocker'
 
 alias dbui='vim +DBUI'
+
+# `git diff dev` / `git diff master`: everything this branch changed (commits and
+# uncommitted work) since it left origin's develop/master, fetched first, in nvim's
+# diffview (q quits). `dev` is short for develop. Paths, commits and every other git
+# command run as usual.
+git() {
+  if [[ $1 == diff && $# -eq 2 && $2 != -* && ! -e $2 ]]; then
+    local base=$2
+    [[ $base == dev ]] && base=develop
+    if command git rev-parse --verify --quiet "refs/remotes/origin/$base" >/dev/null; then
+      command git fetch --quiet origin "$base" || print -u2 "fetch failed, using the last fetched origin/$base"
+      nvim "+DiffviewOpen $(command git merge-base "origin/$base" HEAD)" "+autocmd User DiffviewViewClosed qall"
+      return
+    fi
+  fi
+  command git "$@"
+}
 
 # changed files with diff preview (same as <space>gd in nvim)
 alias gd='nvim "+Pick git_status"'

@@ -2,22 +2,16 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
+    "saghen/blink.cmp",
     { "antosha417/nvim-lsp-file-operations", config = true },
     { "folke/lazydev.nvim", ft = "lua", opts = {} },
     { "b0o/schemastore.nvim", version = false }, -- json/yaml schemas (package.json, tsconfig, ...)
   },
   config = function()
-    local cmp_nvim_lsp = require("cmp_nvim_lsp")
-
     local keymap = vim.keymap
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
-        -- cmp-nvim-lsp only picks up new servers on InsertEnter, so a server that finishes
-        -- starting while you're already typing gave no completions until you re-entered insert
-        pcall(vim.api.nvim_exec_autocmds, "InsertEnter", { group = "cmp_nvim_lsp", modeline = false })
-
         -- Buffer local mappings.
         -- See `:help vim.lsp.*` for documentation on any of the below functions
         local opts = { buffer = ev.buf, silent = true }
@@ -69,7 +63,7 @@ return {
     })
 
     -- used to enable autocompletion (assign to every lsp server config)
-    local capabilities = cmp_nvim_lsp.default_capabilities()
+    local capabilities = require("blink.cmp").get_lsp_capabilities()
 
     vim.diagnostic.config({
       virtual_text = true,
@@ -111,7 +105,7 @@ return {
     })
 
     -- while tsserver loads the project, completions come from a syntax-only server that knows
-    -- no auto-imports (no `Component`, `inject`, ... from @angular/core), and cmp keeps that
+    -- no auto-imports (no `Component`, `inject`, ... from @angular/core), and completion keeps that
     -- list for the whole word; "never" waits for the real project instead
     vim.lsp.config("ts_ls", {
       init_options = {

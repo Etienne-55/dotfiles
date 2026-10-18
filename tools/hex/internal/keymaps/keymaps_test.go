@@ -53,6 +53,14 @@ func TestParseNvim(t *testing.T) {
 			Entry{Display: `␣) "`, Desc: `Wrap word in ) "`, Category: Editing}},
 		{"plugin defaults", "<C-h> <C-j> <C-k> <C-l>", "n",
 			Entry{Display: "⌃h ⌃j ⌃k ⌃l", Category: Navigation}},
+		{"diffview tab keys", "<Tab> <S-Tab>", "n",
+			Entry{Display: "⇥ ⇧⇥", Desc: "Diff view: next / previous file", Scope: "diff view", Category: Git}},
+		{"blink keymap, insert mode, trailing comment", "<C-j>", "i",
+			Entry{Display: "⌃j", Desc: "next suggestion", Scope: "completion menu", Category: Completion}},
+		{"blink keymap without a comment", "<C-e>", "i",
+			Entry{Display: "⌃e", Desc: "hide", Scope: "completion menu", Category: Completion}},
+		{"blink cmdline keymap", "<Down>", "c",
+			Entry{Display: "↓", Desc: "select next", Scope: "completion menu", Category: Completion}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

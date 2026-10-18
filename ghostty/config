@@ -13,7 +13,7 @@ font-family = JetBrains Mono
 # icons: fallbacks for nerd font glyphs (e.g. the tmux RAM icon U+EFC5)
 font-family = MesloLGS Nerd Font Mono
 font-family = Symbols Nerd Font Mono
-font-size = 18
+font-size = 17
 adjust-cell-height = 10%
 
 # ------------------------------------------------------------------ window

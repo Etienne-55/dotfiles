@@ -14,7 +14,7 @@ return {
     "php",
     "astro",
   },
-  -- no nvim-cmp: it serves completions as an in-process LSP server, which cmp-nvim-lsp picks up
+  -- no completion plugin hookup: it serves completions as an in-process LSP server, which blink.cmp's lsp source picks up
   dependencies = { "nvim-treesitter/nvim-treesitter" },
   opts = {
     -- file extensions, not filetypes (it matches "*.<ext>"); angular/django templates are *.html

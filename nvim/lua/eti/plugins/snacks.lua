@@ -27,6 +27,12 @@ return {
     input = { enabled = true }, -- nicer vim.ui.input (replaces dressing.nvim)
     picker = { enabled = true, ui_select = true }, -- nicer vim.ui.select (replaces dressing.nvim)
     lazygit = { enabled = true }, -- floating lazygit window
+    notifier = { enabled = true }, -- vim.notify popups, noice shows its notify view here (replaces nvim-notify)
+    -- indent guides (replaces indent-blankline); the current scope is highlighted
+    indent = {
+      indent = { char = "┊" },
+      animate = { enabled = false },
+    },
   },
   keys = {
     {

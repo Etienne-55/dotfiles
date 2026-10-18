@@ -15,7 +15,7 @@ var luaDirs = []string{"lua", "plugin", "after", "ftplugin"}
 // scopes names where a file's buffer-local and in-plugin mappings apply.
 var scopes = map[string]string{
 	"telescope": "picker",
-	"nvim-cmp":  "completion menu",
+	"blink-cmp": "completion menu",
 	"oil":       "oil",
 	"dashboard": "dashboard",
 }
@@ -332,7 +332,7 @@ func (f *luaFile) parseLazyKeys(i int, env map[string]string) ([]Entry, int) {
 var keyLike = regexp.MustCompile(`^(<[^<>]+>|[^\s<>]{1,2})$`)
 
 // isMappingField reports whether a `["<C-k>"] = action` entry of a mapping
-// table (telescope's mappings, cmp's mapping, oil's keymaps) starts at i.
+// table (telescope's mappings, blink.cmp's keymap, oil's keymaps) starts at i.
 func (f *luaFile) isMappingField(i int, stack []string) bool {
 	if !f.is(i, "[") || f.tok(i+1).kind != tkString || !f.is(i+2, "]") || !f.is(i+3, "=") {
 		return false
@@ -341,7 +341,7 @@ func (f *luaFile) isMappingField(i int, stack []string) bool {
 		return false
 	}
 	for _, label := range stack {
-		if label == "mappings" || label == "keymaps" || label == "keys" || strings.Contains(label, "mapping") {
+		if label == "mappings" || label == "keymap" || label == "keymaps" || label == "keys" || strings.Contains(label, "mapping") {
 			return true
 		}
 	}
@@ -350,13 +350,17 @@ func (f *luaFile) isMappingField(i int, stack []string) bool {
 
 var modeLetter = regexp.MustCompile(`^[nvxsoict]$`)
 
+// defaultModes is the mode of a file's mapping-table entries that say none.
+var defaultModes = map[string]string{"blink-cmp": "i"}
+
 func (f *luaFile) parseMappingField(i int, stack []string) ([]Entry, int) {
 	lhs := f.tok(i + 1).val
 	value, next := f.expr(i + 4)
 
 	// the mode: the value's own ({ c = action }, { action, mode = "n" }),
-	// else the table it sits in (mappings = { i = { ... } }, or cmp's
-	// preset.insert / preset.cmdline)
+	// else the table it sits in (mappings = { i = { ... } }, cmp's
+	// preset.insert / preset.cmdline, blink.cmp's cmdline = { keymap = ... }),
+	// else the file's own default (blink.cmp's keymap is insert mode)
 	var modes string
 	action := value
 	if value.kind == nTable {
@@ -379,9 +383,12 @@ func (f *luaFile) parseMappingField(i int, stack []string) ([]Entry, int) {
 			modes = label
 		case strings.HasSuffix(label, "preset.insert"):
 			modes = "i"
-		case strings.HasSuffix(label, "preset.cmdline"):
+		case strings.HasSuffix(label, "preset.cmdline"), label == "cmdline":
 			modes = "c"
 		}
+	}
+	if modes == "" {
+		modes = defaultModes[f.stem()]
 	}
 	if modes == "" {
 		modes = "n"
@@ -497,6 +504,23 @@ func pluginDefaults(files []*luaFile, leader string) []Entry {
 	var entries []Entry
 	for _, f := range files {
 		for i, t := range f.toks {
+			if t.kind == tkString && t.val == "dlyongemallo/diffview-plus.nvim" {
+				for _, d := range diffviewDefaults {
+					entries = append(entries, Entry{
+						Keys:     d.keys,
+						Display:  prettyVimKeys(d.keys, leader),
+						Modes:    "n",
+						Desc:     d.desc,
+						Note:     "keys of the diffview tab",
+						Action:   d.action,
+						Scope:    "diff view",
+						Category: Git,
+						File:     f.rel,
+						Path:     f.path,
+						Line:     f.toks[i].line,
+					})
+				}
+			}
 			if t.kind == tkString && t.val == "christoomey/vim-tmux-navigator" {
 				keys := "<C-h> <C-j> <C-k> <C-l>"
 				entries = append(entries, Entry{
@@ -511,9 +535,16 @@ func pluginDefaults(files []*luaFile, leader string) []Entry {
 					Path:     f.path,
 					Line:     f.toks[i].line,
 				})
-				return entries
 			}
 		}
 	}
 	return entries
+}
+
+// diffviewDefaults are the keys of a diffview tab (`git diff dev`, <leader>gv):
+// diffview's own, and the q that diffview.lua sets through a shared local
+var diffviewDefaults = []struct{ keys, desc, action string }{
+	{"<Tab> <S-Tab>", "Diff view: next / previous file", "select_next_entry / select_prev_entry"},
+	{"]c [c", "Diff view: next / previous change", "]c / [c (vim diff mode)"},
+	{"q", "Diff view: close (quits nvim when opened by `git diff dev`)", "DiffviewClose"},
 }

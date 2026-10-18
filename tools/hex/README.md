@@ -33,9 +33,9 @@ A description in dim italics means the mapping has no `desc`, so Hex shows its c
 - **neovim**: `init.lua` and everything under `lua/`: `vim.keymap.set(...)` (with
   `desc` in its opts, or an `opts.desc = ...` set just before), lazy.nvim `keys = { ... }`
   specs, local `map(mode, lhs, rhs, desc)` helpers like gitsigns', the `["<C-k>"] = ...`
-  tables of telescope / cmp / oil (a trailing `-- comment` becomes the description), and
-  `for _, c in ipairs({ ... })` loops. vim-tmux-navigator's default keys are added when
-  the plugin is installed.
+  tables of telescope / blink.cmp / oil (a trailing `-- comment` becomes the description), and
+  `for _, c in ipairs({ ... })` loops. vim-tmux-navigator's default keys, and the keys of
+  a diffview tab, are added when the plugin is installed.
 - **tmux**: `~/.tmux.conf`. The description is the comment above a binding (`# prefix + e: ...`),
   or the one at the end of its line.
 - **zsh**: the aliases in `~/.zshrc`, plus functions that have a comment above them.

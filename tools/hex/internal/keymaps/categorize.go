@@ -20,13 +20,13 @@ var rules = []rule{
 	{desc: re(`(?i)diagnostic`), cat: Diagnostics},
 
 	{file: re(`^telescope\.lua$`), cat: Telescope},
-	{file: re(`^gitsigns\.lua$`), cat: Git},
+	{file: re(`^(gitsigns|diffview)\.lua$`), cat: Git},
 	{file: re(`^(lspconfig|mason)\.lua$`), cat: LSP},
 	{file: re(`^trouble\.lua$`), cat: Diagnostics},
 	{file: re(`^claudecode\.lua$`), cat: Claude},
 	{file: re(`^(harpoon|flash|oil|nvim-tree|todo-comments)\.lua$`), cat: Navigation},
-	{file: re(`^nvim-cmp\.lua$`), cat: Completion},
-	{file: re(`^(surround|formatting|treesitter|undotree|autopairs|autotag)\.lua$`), cat: Editing},
+	{file: re(`^blink-cmp\.lua$`), cat: Completion},
+	{file: re(`^(surround|formatting|treesitter|undotree|autopairs|autotag|quicker)\.lua$`), cat: Editing},
 	{file: re(`^snacks\.lua$`), desc: re(`(?i)^rename`), cat: Editing},
 	{desc: re(`(?i)^replace`), cat: Editing},
 

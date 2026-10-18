@@ -16,16 +16,15 @@ return {
     local pickers = require("telescope.pickers")
     local previewers = require("telescope.previewers")
     local conf = require("telescope.config").values
-    local transform_mod = require("telescope.actions.mt").transform_mod
 
-    local trouble = require("trouble")
     local trouble_telescope = require("trouble.sources.telescope")
 
-    local custom_actions = transform_mod({
-      open_trouble_qflist = function(prompt_bufnr)
-        trouble.toggle("quickfix")
-      end,
-    })
+    -- the selected results (<Tab> marks some), or all of them, into the editable
+    -- quickfix list (quicker.nvim), opened over half the screen like <leader>xx
+    local function send_to_quicker(prompt_bufnr)
+      actions.smart_send_to_qflist(prompt_bufnr) -- also closes the picker
+      require("quicker").open({ focus = true, height = math.floor(vim.o.lines / 2) })
+    end
 
     telescope.setup({
       defaults = {
@@ -34,8 +33,11 @@ return {
           i = {
             ["<C-k>"] = actions.move_selection_previous, -- move to prev result
             ["<C-j>"] = actions.move_selection_next, -- move to next result
-            ["<C-q>"] = actions.send_selected_to_qflist + custom_actions.open_trouble_qflist,
+            ["<C-q>"] = send_to_quicker, -- results into the editable quickfix list
             ["<C-t>"] = trouble_telescope.open,
+          },
+          n = {
+            ["<C-q>"] = send_to_quicker, -- results into the editable quickfix list
           },
         },
       },

@@ -42,6 +42,8 @@ return {
         "angularls",
         "eslint",
         "emmet_language_server", -- replaces emmet_ls, which merged tags like "<<div></div>"
+        "svelte",
+        "graphql", -- only attaches in projects with a graphql config (.graphqlrc, graphql.config.*)
       },
     })
 

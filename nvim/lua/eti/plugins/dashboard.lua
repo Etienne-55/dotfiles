@@ -2,10 +2,10 @@
 -- The art and the bouncing Pokémon live in eti/extras/dashboard.lua.
 local dashboard = require("eti.extras.dashboard")
 
--- the shell aliases (`nvim "+Pick find_files"`) go straight to a picker; the
--- dashboard would only show through behind it
+-- the shell aliases (`nvim "+Pick find_files"`) go straight to a picker, and
+-- `git diff dev` straight to diffview; the dashboard would only show through behind it
 local from_pick = vim.iter(vim.v.argv):any(function(a)
-  return vim.startswith(a, "+Pick")
+  return vim.startswith(a, "+Pick") or vim.startswith(a, "+DiffviewOpen")
 end)
 
 return {

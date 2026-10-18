@@ -1,16 +1,5 @@
 return {
   {
-    "alec-gibson/nvim-tetris",
-    cmd = "Tetris",
-    keys = {
-      { "<leader>tt", function() require("eti.extras.tetris").toggle() end, desc = "Toggle Tetris (hides & pauses)" },
-    },
-    config = function()
-      require("eti.extras.tetris").setup() -- 1984 look, music, pause on hide
-    end,
-  },
-
-  {
     "tamton-aquib/zone.nvim",
     event = "VeryLazy",
     dependencies = { "folke/zen-mode.nvim" },
@@ -19,7 +8,7 @@ return {
       -- mode, open zen mode and run zone's treadmill on top of it. The next key
       -- stops both (and is swallowed, so waking it up doesn't also edit).
       local idle_ms = 5 * 60 * 1000
-      local excluded = { TelescopePrompt = true, NvimTree = true, snacks_dashboard = true, lazy = true, oil = true, tetris = true }
+      local excluded = { TelescopePrompt = true, NvimTree = true, snacks_dashboard = true, lazy = true, oil = true }
       local timer = assert(vim.uv.new_timer())
       local running, opened_zen = false, false -- running also covers "about to start"
       local focused = true

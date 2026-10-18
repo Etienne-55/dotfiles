@@ -11,3 +11,20 @@
 	side-by-side = true
 	line-numbers = true
 	navigate = true
+	# classic red/green for removed/added lines, no syntax colors; unchanged lines in
+	# a soft grey. The changed words inside a line get a darker red/green background.
+	syntax-theme = none
+	minus-style = "#F85149"
+	plus-style = "#3FB950"
+	minus-emph-style = "bold #F85149 #4A1A1D"
+	plus-emph-style = "bold #3FB950 #173A22"
+	zero-style = "#A39DB3"
+	line-numbers-minus-style = "#F85149"
+	line-numbers-plus-style = "#3FB950"
+	line-numbers-zero-style = "#5A4A78"
+	line-numbers-left-style = "#3A2E52"
+	line-numbers-right-style = "#3A2E52"
+	file-style = bold "#B3A8CC"
+	file-decoration-style = "#5A4A78" ul
+	hunk-header-style = file line-number "#8A82A0"
+	hunk-header-decoration-style = "#3A2E52" box
