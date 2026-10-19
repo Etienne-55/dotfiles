@@ -26,8 +26,7 @@ the `brew bundle` step.
 4. Adds an `[include]` of `git/gitconfig` to the top of `~/.gitconfig`,
    keeping everything already in it.
 5. Installs tmux's plugin manager and your tmux plugins.
-6. Installs pokemon-colorscripts (the random Pokémon on the neovim dashboard).
-7. Installs the neovim plugins, language servers and formatters.
+6. Installs the neovim plugins, language servers and formatters.
 
 Because the dotfiles are **symlinks**, editing `~/.zshrc` edits the copy in this
 repo — commit it and the next machine gets it.

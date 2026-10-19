@@ -107,16 +107,6 @@ fi
 log "Installing tmux plugins"
 "$TPM/bin/install_plugins" || warn "could not install tmux plugins - open tmux and press prefix + I"
 
-# ------------------------------------------------------ pokemon-colorscripts
-# random Pokémon on the neovim dashboard; not in homebrew, so installed per-user (no sudo)
-POKE="$HOME/.local/share/pokemon-colorscripts"
-if [ ! -d "$POKE" ]; then
-  log "Installing pokemon-colorscripts"
-  git clone --depth 1 https://gitlab.com/phoneybadger/pokemon-colorscripts.git "$POKE"
-fi
-mkdir -p "$HOME/.local/bin"
-ln -sf "$POKE/pokemon-colorscripts.py" "$HOME/.local/bin/pokemon-colorscripts"
-
 # ------------------------------------------------------------------ neovim
 log "Installing neovim plugins"
 nvim --headless "+Lazy! sync" +qa

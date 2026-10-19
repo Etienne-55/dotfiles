@@ -32,6 +32,11 @@ return {
         hl.LineNrAbove = { fg = p.dark5 }
         hl.LineNrBelow = { fg = p.dark5 }
         hl.CursorLineNr = { fg = p.border_prompt, bold = true }
+        -- dashboard branch and worktree in neon: hot pink branch, purple folder, cyan icon
+        hl.SnacksDashboardFile = { fg = p.magenta, bold = true }
+        hl.SnacksDashboardDir = { fg = p.purple }
+        hl.SnacksDashboardTitle = { fg = p.cyan, bold = true }
+        hl.SnacksDashboardIcon = { fg = p.cyan }
       end,
     })
 

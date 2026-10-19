@@ -101,7 +101,7 @@ function M.pick(from_shell)
       if target and vim.fn.filereadable(target) == 1 then
         vim.cmd.edit(vim.fn.fnameescape(target))
       elseif vim.bo.filetype == "snacks_dashboard" then
-        Snacks.dashboard.update() -- stays; its recent files follow the new cwd
+        Snacks.dashboard.update() -- stays; its branch and folder follow the new cwd
       elseif from_shell then
         -- `gw` from the shell lands on the dashboard, in this window (not a float),
         -- so :Pick's blank window options on it are restored
