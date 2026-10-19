@@ -41,7 +41,7 @@ if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
     _boo
     zle && zle clear-screen
   }
-  TMOUT=300
+  TMOUT=1200
 fi
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
@@ -127,7 +127,7 @@ tmux() {
 
 alias c='clear'
 
-alias lg='lazygit'
+alias gg='lazygit'
 
 alias ld='lazydocker'
 

@@ -2,9 +2,9 @@ vim.g.mapleader = " "
 
 local keymap = vim.keymap
 
--- registers: only visual d (and y) copy; normal-mode d/D delete into the black hole
-keymap.set("n", "d", '"_d') -- dd, dw, d$... don't overwrite the clipboard
-keymap.set("n", "D", '"_D')
+-- registers (primeagen style): d copies as usual, <leader>d deletes into the black hole
+keymap.set({ "n", "v" }, "<leader>d", [["_d]]) -- delete without copying
+keymap.set("x", "<leader>p", [["_dP]]) -- paste over selection, keep the register
 
 -- move selected lines; in read-only buffers (Claude terminal, help...) keep the native
 -- key, so selecting with J / K before a yank still works there

@@ -2,6 +2,19 @@ return {
   "folke/noice.nvim",
   event = "VeryLazy",
   opts = {
+    -- no " Cmdline " / " Search " / ... title on the popup border: just the bar
+    cmdline = {
+      format = {
+        cmdline = { title = "" },
+        search_down = { title = "" },
+        search_up = { title = "" },
+        filter = { title = "" },
+        lua = { title = "" },
+        help = { title = "" },
+        calculator = { title = "" },
+        input = { title = "" },
+      },
+    },
     lsp = {
       -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
       override = {
@@ -104,6 +117,59 @@ return {
       },
     },
   },
+  config = function(_, opts)
+    require("noice").setup(opts)
+
+    -- the cmdline popup border slowly fades through the syntax colors while the
+    -- cmdline is open, like the `git push` rainbow in zshrc. Every per-kind border
+    -- links to NoiceCmdlinePopupBorder, except search which has its own group.
+    local p = require("eti.core.palette")
+    local colors = { p.purple, p.magenta, p.red, p.orange, p.yellow, p.green, p.cyan, p.blue }
+    local STEP_MS = 50
+    local FADE_STEPS = 40 -- 2s from one color to the next, 16s for the whole cycle
+
+    local function rgb(hex)
+      return tonumber(hex:sub(2, 3), 16), tonumber(hex:sub(4, 5), 16), tonumber(hex:sub(6, 7), 16)
+    end
+
+    local function mix(a, b, t)
+      local ar, ag, ab = rgb(a)
+      local br, bg, bb = rgb(b)
+      return string.format(
+        "#%02x%02x%02x",
+        math.floor(ar + (br - ar) * t + 0.5),
+        math.floor(ag + (bg - ag) * t + 0.5),
+        math.floor(ab + (bb - ab) * t + 0.5)
+      )
+    end
+
+    local frame = 0 -- kept between cmdlines, so it picks up where it stopped
+    local function paint()
+      local i = math.floor(frame / FADE_STEPS)
+      local color = mix(colors[i % #colors + 1], colors[(i + 1) % #colors + 1], (frame % FADE_STEPS) / FADE_STEPS)
+      vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = color })
+      vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorderSearch", { fg = color })
+    end
+
+    local timer = assert(vim.uv.new_timer())
+    vim.api.nvim_create_autocmd("CmdlineEnter", {
+      callback = function()
+        paint()
+        timer:start(STEP_MS, STEP_MS, vim.schedule_wrap(function()
+          frame = (frame + 1) % (#colors * FADE_STEPS)
+          paint()
+          vim.api.nvim__redraw({ flush = true })
+        end))
+      end,
+    })
+    vim.api.nvim_create_autocmd("CmdlineLeave", {
+      callback = function()
+        timer:stop()
+      end,
+    })
+    -- a colorscheme reload resets the groups; paint them again
+    vim.api.nvim_create_autocmd("ColorScheme", { callback = paint })
+  end,
   dependencies = {
     "MunifTanjim/nui.nvim",
   }

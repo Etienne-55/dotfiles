@@ -51,14 +51,17 @@ return {
       ["<C-Space>"] = { "show", "show_documentation", "hide_documentation" }, -- show completion suggestions
       ["<C-e>"] = { "hide", "fallback" }, -- close completion window
       ["<CR>"] = { "accept", "fallback" }, -- accept the selected suggestion (nothing is preselected)
-      -- next / previous snippet placeholder (snippets and LSP function arguments); a plain Tab everywhere else
-      ["<Tab>"] = { "snippet_forward", "fallback" },
+      -- menu open: accept the selected suggestion, or the first one if none is selected (the faded one);
+      -- otherwise next snippet placeholder (snippets and LSP function arguments); a plain Tab everywhere else
+      ["<Tab>"] = { "select_and_accept", "snippet_forward", "fallback" },
       ["<S-Tab>"] = { "snippet_backward", "fallback" },
     },
     completion = {
       -- nothing selected until <C-j>/<C-k>, and the selection isn't typed into the buffer
       list = { selection = { preselect = false, auto_insert = false } },
       documentation = { auto_show = true },
+      -- faded preview of what <Tab> would insert, even with nothing selected
+      ghost_text = { enabled = true, show_without_selection = true },
     },
     snippets = { preset = "luasnip" },
     sources = {

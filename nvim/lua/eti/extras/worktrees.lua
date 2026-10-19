@@ -26,8 +26,8 @@ end
 -- copying node_modules/.env* into it;
 -- <Space>dd (any mode; branch names have no spaces) deletes the selected one and
 -- its branch after one confirm, uncommitted changes included.
--- A failed create reopens the list with the typed text kept.
-function M.pick(from_shell, default_text)
+-- Both show a spinner in the list's title while git works.
+function M.pick(from_shell)
   local root = vim.fn.systemlist({ "git", "rev-parse", "--show-toplevel" })[1]
   if vim.v.shell_error ~= 0 then
     vim.notify("Not in a git repo", vim.log.levels.WARN)
@@ -153,32 +153,63 @@ function M.pick(from_shell, default_text)
     return res.code == 0
   end
 
+  -- same, in the background (checkouts and removals take seconds): the picker
+  -- keeps drawing, then next(ok)
+  local function git_async(args, next)
+    vim.system(vim.list_extend({ "git" }, args), { text = true }, vim.schedule_wrap(function(res)
+      if res.code ~= 0 then
+        vim.notify(vim.trim(res.stderr), vim.log.levels.ERROR, { title = "Worktree" })
+      end
+      next(res.code == 0)
+    end))
+  end
+
   -- the gitignored things a fresh worktree needs to run: node_modules folders and
   -- .env* files, cloned from the current worktree. APFS clone: 1.4G of
-  -- node_modules in ~2s, no extra disk. They may lag the new branch's lockfile.
-  local function copy_ignored(dir)
-    local ffi = require("ffi")
-    pcall(ffi.cdef, "int clonefile(const char *src, const char *dst, uint32_t flags);")
+  -- node_modules in ~2s, no extra disk, in a libuv thread so the spinner keeps
+  -- going. They may lag the new branch's lockfile. Then done().
+  local function copy_ignored(dir, done)
     local res = vim.system({ "git", "-C", root, "ls-files", "--others", "--ignored", "--exclude-standard", "--directory" }, { text = true })
       :wait()
-    local copied, failed = {}, {}
+    local rels = {}
     for _, entry in ipairs(vim.split(res.stdout or "", "\n", { trimempty = true })) do
       local rel = (entry:gsub("/$", ""))
       local name = vim.fs.basename(rel)
       local dst = dir .. "/" .. rel
       if (name == "node_modules" or name:match("^%.env")) and not vim.uv.fs_lstat(dst) and vim.uv.fs_stat(vim.fs.dirname(dst)) then
-        local ok, code = pcall(function()
-          return ffi.C.clonefile(root .. "/" .. rel, dst, 1) -- 1: CLONE_NOFOLLOW
-        end)
-        table.insert((ok and code == 0) and copied or failed, rel)
+        rels[#rels + 1] = rel
       end
     end
-    if #copied > 0 then
-      vim.notify("Copied " .. table.concat(copied, ", "), vim.log.levels.INFO, { title = "Worktree" })
+    if #rels == 0 then
+      return done()
     end
-    if #failed > 0 then
-      vim.notify("Not copied: " .. table.concat(failed, ", "), vim.log.levels.WARN, { title = "Worktree" })
-    end
+    -- the thread has its own Lua state: no `vim`, upvalues or tables, only strings in and out
+    vim.uv.new_work(function(src_root, dst_root, list_str)
+      local ffi = require("ffi")
+      pcall(ffi.cdef, "int clonefile(const char *src, const char *dst, uint32_t flags);")
+      local failed = {}
+      for rel in list_str:gmatch("[^\n]+") do
+        local ok, code = pcall(function()
+          return ffi.C.clonefile(src_root .. "/" .. rel, dst_root .. "/" .. rel, 1) -- 1: CLONE_NOFOLLOW
+        end)
+        if not (ok and code == 0) then
+          failed[#failed + 1] = rel
+        end
+      end
+      return table.concat(failed, "\n")
+    end, vim.schedule_wrap(function(failed_str)
+      local failed = vim.split(failed_str, "\n", { trimempty = true })
+      local copied = vim.tbl_filter(function(rel)
+        return not vim.tbl_contains(failed, rel)
+      end, rels)
+      if #copied > 0 then
+        vim.notify("Copied " .. table.concat(copied, ", "), vim.log.levels.INFO, { title = "Worktree" })
+      end
+      if #failed > 0 then
+        vim.notify("Not copied: " .. table.concat(failed, ", "), vim.log.levels.WARN, { title = "Worktree" })
+      end
+      done()
+    end)):queue(root, dir, table.concat(rels, "\n"))
   end
 
   -- worktree on <branch> next to the main one, named after the branch's trailing
@@ -187,10 +218,10 @@ function M.pick(from_shell, default_text)
   -- A local branch is reused as it is. Otherwise origin's branch (as last fetched,
   -- no network here) if it has one, else a new one from the branch the current
   -- worktree is on (its local state).
-  -- done(ok) gets whether it worked.
+  -- done(dir) gets the new worktree's folder, nil when it failed.
   local function create(branch, done)
     if not git({ "check-ref-format", "--branch", branch }) then
-      return done(false)
+      return done()
     end
 
     local function add(on_origin)
@@ -205,19 +236,17 @@ function M.pick(from_shell, default_text)
         end
       end
 
-      local ok
-      if on_origin then
-        ok = git({ "worktree", "add", dir, branch })
-      else
-        -- HEAD here is the current worktree's, since git runs in nvim's cwd
-        -- --no-track: the new branch must not pull from / push to its base
-        ok = git({ "worktree", "add", "--no-track", "-b", branch, dir, "HEAD" })
-      end
-      if ok then
-        copy_ignored(dir)
-        switch(dir)
-      end
-      done(ok)
+      -- HEAD here is the current worktree's, since git runs in nvim's cwd
+      -- --no-track: the new branch must not pull from / push to its base
+      local args = on_origin and { "worktree", "add", dir, branch } or { "worktree", "add", "--no-track", "-b", branch, dir, "HEAD" }
+      git_async(args, function(ok)
+        if not ok then
+          return done()
+        end
+        copy_ignored(dir, function()
+          done(dir)
+        end)
+      end)
     end
 
     local function has(ref)
@@ -229,15 +258,25 @@ function M.pick(from_shell, default_text)
   -- force-removes the worktree (uncommitted changes go with it) and deletes its
   -- local branch, like lazygit. Never touches origin: no push, no merge, no
   -- remote delete (that would close the MR).
-  local function remove(wt)
-    if not git({ "worktree", "remove", "--force", wt.path }) then
-      return
-    end
-    local msg = "Removed " .. vim.fn.fnamemodify(wt.path, ":~")
-    if wt.branch ~= "(detached)" and git({ "branch", "-D", wt.branch }) then
-      msg = msg .. "\nBranch " .. wt.branch .. " deleted"
-    end
-    vim.notify(msg, vim.log.levels.INFO, { title = "Worktree" })
+  -- done() runs once it's over, either way.
+  local function remove(wt, done)
+    git_async({ "worktree", "remove", "--force", wt.path }, function(ok)
+      if not ok then
+        return done()
+      end
+      local msg = "Removed " .. vim.fn.fnamemodify(wt.path, ":~")
+      if wt.branch == "(detached)" then
+        vim.notify(msg, vim.log.levels.INFO, { title = "Worktree" })
+        return done()
+      end
+      git_async({ "branch", "-D", wt.branch }, function(deleted)
+        if deleted then
+          msg = msg .. "\nBranch " .. wt.branch .. " deleted"
+        end
+        vim.notify(msg, vim.log.levels.INFO, { title = "Worktree" })
+        done()
+      end)
+    end)
   end
 
   -- the picked worktree; already in it: from the shell, the dashboard
@@ -249,19 +288,6 @@ function M.pick(from_shell, default_text)
     end
   end
 
-  -- a failed create (bad name, folder taken, branch open elsewhere) brings the
-  -- list back with the name typed, instead of an empty screen
-  -- (scheduled: runs after telescope has fully closed)
-  local function create_or_reopen(branch)
-    vim.schedule(function()
-      create(branch, function(ok)
-        if not ok then
-          M.pick(from_shell, branch)
-        end
-      end)
-    end)
-  end
-
   local width = 0
   for _, wt in ipairs(list) do
     width = math.max(width, #wt.branch)
@@ -269,7 +295,6 @@ function M.pick(from_shell, default_text)
   pickers
     .new({}, {
       prompt_title = "Worktrees  <cr> go/create · <Space>dd delete",
-      default_text = default_text,
       finder = finders.new_table({
         results = list,
         entry_maker = function(wt)
@@ -297,30 +322,74 @@ function M.pick(from_shell, default_text)
         end,
       }),
       attach_mappings = function(prompt_bufnr, map)
+        -- while git creates or deletes, the list stays up with a spinner in its
+        -- title, and <cr>/<Space>dd do nothing. Returns the function ending it.
+        local busy = false
+        local function spin(text)
+          busy = true
+          local picker = action_state.get_current_picker(prompt_bufnr)
+          local frames, i = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }, 0
+          local timer = vim.uv.new_timer()
+          timer:start(0, 80, vim.schedule_wrap(function()
+            if timer:is_closing() then
+              return -- a tick scheduled just before the stop
+            end
+            i = i % #frames + 1
+            pcall(function()
+              picker.prompt_border:change_title(frames[i] .. " " .. text .. "…")
+            end)
+          end))
+          return function()
+            busy = false
+            timer:stop()
+            timer:close()
+            pcall(function()
+              picker.prompt_border:change_title(picker.prompt_title)
+            end)
+          end
+        end
+        local function close()
+          if vim.api.nvim_buf_is_valid(prompt_bufnr) then
+            actions.close(prompt_bufnr)
+          end
+        end
+
         -- the worktree on exactly the typed branch; else a typed full branch name
         -- ("/" in it) is created even when it matches others (feature/swtrk-159
         -- vs feature/swtrk-1590), while a search ("1590") goes to the selection;
-        -- nothing matching: created
+        -- nothing matching: created, then entered. A failed create (bad name,
+        -- folder taken, branch open elsewhere) leaves the list up, name typed.
         actions.select_default:replace(function()
+          if busy then
+            return
+          end
           local typed = vim.trim(action_state.get_current_line())
           local entry = action_state.get_selected_entry()
-          actions.close(prompt_bufnr)
           for _, wt in ipairs(list) do
             if wt.branch == typed then
+              close()
               return go(wt.path)
             end
           end
           if entry and not typed:find("/", 1, true) then
+            close()
             go(entry.value)
           elseif typed ~= "" then
-            create_or_reopen(typed)
+            local stop = spin("Creating " .. typed)
+            create(typed, function(dir)
+              stop()
+              if dir then
+                close()
+                switch(dir)
+              end
+            end)
           end
         end)
         -- <Space>dd: remove the selected worktree and its branch (<cr> confirms),
         -- then reopen the list. The confirm names what is lost, if anything.
         map({ "i", "n" }, "<Space>dd", function()
           local entry = action_state.get_selected_entry()
-          if not entry then
+          if not entry or busy then
             return
           end
           local wt = entry.wt
@@ -346,9 +415,12 @@ function M.pick(from_shell, default_text)
           if vim.fn.confirm(question, "&Yes\n&No", 1) ~= 1 then
             return
           end
-          actions.close(prompt_bufnr)
-          remove(wt)
-          M.pick(from_shell)
+          local stop = spin("Deleting " .. wt.branch)
+          remove(wt, function()
+            stop()
+            close()
+            M.pick(from_shell)
+          end)
         end)
         if from_shell then
           quit_on_escape(prompt_bufnr, map)

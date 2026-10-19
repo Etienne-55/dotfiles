@@ -35,7 +35,7 @@ return {
       function() require("quicker").toggle(half()) end,
       desc = "Toggle the editable quickfix list (half the screen)",
     },
-    { "<leader>xw", word_to_list, mode = { "n", "x" }, desc = "Word under cursor: every mention into the list" },
+    { "<leader>w", word_to_list, mode = { "n", "x" }, desc = "Word under cursor: every mention into the list" },
   },
   opts = {
     keys = {
