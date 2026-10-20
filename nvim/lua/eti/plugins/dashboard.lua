@@ -92,16 +92,14 @@ local function twinkle(colors)
   }
 end
 
--- Flashlight: the banner sits in the `dark` (the background color, so it's hidden
--- until lit) and a round white `beam` wanders over it looking for ghosts; letters
--- it catches glow in bands of `ghost` and `ghost2` that ripple across them
+-- Flashlight: the banner is drawn in `dark` (the terminal's background color, so
+-- it's hidden until lit) and a round white `beam` wanders over it looking for
+-- ghosts; letters it catches glow in bands of `ghost` and `ghost2` that ripple
+-- across them
 local function flashlight(o)
   local R = 4.2 -- beam radius in rows (a cell is twice as tall as wide)
   return {
     pad = math.ceil(R),
-    -- solid, so Ghostty draws it opaque (its background-opacity only applies to
-    -- cells without a color of their own): pitch black, letters hidden in it
-    bg = o.dark,
     frame = function(tick, h, w)
       -- sines at unrelated speeds never retrace the same path, so it reads as
       -- searching; the fast small ones are the hand shaking
@@ -182,7 +180,7 @@ local banners = {
     [[     \/__/         \/__/         \/__/                                   \/__/     ]],
   },
   {
-    effect = flashlight({ ghost = "#8BFF2E", ghost2 = "#B44CFF", beam = "#F2FFE8", dark = "#000000" }), -- ectoplasm green, neon purple
+    effect = flashlight({ ghost = "#8BFF2E", ghost2 = "#B44CFF", beam = "#F2FFE8", dark = p.bg }), -- ectoplasm green, neon purple
     [[      .-') _   ('-.                     (`-.           _   .-')    ]],
     [[     ( OO ) )_(  OO)                  _(OO  )_        ( '.( OO )_  ]],
     [[ ,--./ ,--,'(,------. .-'),-----. ,--(_/   ,. \ ,-.-') ,--.   ,--.)]],
