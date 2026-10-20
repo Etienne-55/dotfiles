@@ -1,4 +1,4 @@
-# ghostty's ghost (+boo): in the first shell after ghostty starts, and again after 5
+# ghostty's ghost (+boo): in the first shell after ghostty starts, and again after 20
 # minutes idle at the prompt. It needs 100+ columns: in a narrower window the font goes
 # 3 steps down (like Ctrl+- x3) through ghostty's AppleScript, then back to normal after q.
 # Above the instant prompt: it's interactive.

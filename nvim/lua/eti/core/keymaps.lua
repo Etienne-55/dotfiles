@@ -34,11 +34,10 @@ for _, key in ipairs({ "<PageUp>", "<S-Up>" }) do
   keymap.set({ "n", "x" }, key, "<C-u>zz")
 end
 
--- search: keep the match centered; <Esc> clears the highlight
-keymap.set("n", "n", "nzz")
-keymap.set("n", "N", "Nzz")
--- same after a / or ? search, only from normal mode: in `c/foo<CR>` or <C-o>/ from
--- insert mode the zz would be typed into the buffer
+-- search: <CR> on a / or ? search centers the match (n/N/*/# do too, in
+-- plugins/hlslens); <Esc> clears the highlight.
+-- Only from normal mode: in `c/foo<CR>` or <C-o>/ from insert mode the zz would be
+-- typed into the buffer
 vim.api.nvim_create_autocmd("CmdlineLeave", {
   group = vim.api.nvim_create_augroup("eti_search_center", { clear = true }),
   pattern = { "/", "?" },
@@ -88,3 +87,6 @@ keymap.set("n", "<leader>rr", function()
     if vim.api.nvim_win_is_valid(code_win) then vim.api.nvim_set_current_win(code_win) end
   end, { buffer = run_buf, nowait = true, desc = "Close run output" })
 end, { desc = "Run current file in a split" })
+
+-- gd (Telescope lsp_definitions) pushes onto the tagstack, so <C-t> pops exactly one gd
+keymap.set("n", "<leader>6", "<C-t>", { desc = "Back from definition (pop tagstack)" })

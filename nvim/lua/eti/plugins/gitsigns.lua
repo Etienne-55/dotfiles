@@ -9,12 +9,18 @@ return {
         vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
       end
 
-      -- Navigation
-      map("n", "]h", function() gs.nav_hunk("next") end, "Next Hunk")
-      map("n", "[h", function() gs.nav_hunk("prev") end, "Prev Hunk")
+      -- Navigation: the hunk always lands in the middle of the screen, even when it
+      -- was already visible. nav_hunk is async, so center from its callback.
+      local function nav(direction)
+        return function()
+          gs.nav_hunk(direction, nil, vim.schedule_wrap(function() vim.cmd("normal! zz") end))
+        end
+      end
+      map("n", "]h", nav("next"), "Next Hunk")
+      map("n", "[h", nav("prev"), "Prev Hunk")
       -- shift+[ / shift+] too; normal mode only, so d} / v} keep their paragraph motion
-      map("n", "}", function() gs.nav_hunk("next") end, "Next Hunk")
-      map("n", "{", function() gs.nav_hunk("prev") end, "Prev Hunk")
+      map("n", "}", nav("next"), "Next Hunk")
+      map("n", "{", nav("prev"), "Prev Hunk")
 
       -- Actions
       map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")

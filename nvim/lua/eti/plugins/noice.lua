@@ -155,6 +155,12 @@ return {
     vim.api.nvim_create_autocmd("CmdlineEnter", {
       callback = function()
         paint()
+        -- no fade on / and ?: every nvim_set_hl redraws all windows, which made the
+        -- incsearch highlights flicker at the timer rate
+        local cmdtype = vim.v.event.cmdtype
+        if cmdtype == "/" or cmdtype == "?" then
+          return
+        end
         timer:start(STEP_MS, STEP_MS, vim.schedule_wrap(function()
           frame = (frame + 1) % (#colors * FADE_STEPS)
           paint()

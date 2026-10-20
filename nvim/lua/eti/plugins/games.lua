@@ -4,10 +4,11 @@ return {
     event = "VeryLazy",
     dependencies = { "folke/zen-mode.nvim" },
     config = function()
-      -- Own idle timer instead of zone.setup(): after 5 min without a key in normal
+      -- Own idle timer instead of zone.setup(): after 20 min without a key in normal
       -- mode, open zen mode and run zone's treadmill on top of it. The next key
       -- stops both (and is swallowed, so waking it up doesn't also edit).
-      local idle_ms = 5 * 60 * 1000
+      -- Same delay as ghostty's boo screensaver (tmux lock-after-time, zsh TMOUT).
+      local idle_ms = 20 * 60 * 1000
       local excluded = { TelescopePrompt = true, NvimTree = true, snacks_dashboard = true, lazy = true, oil = true }
       local timer = assert(vim.uv.new_timer())
       local running, opened_zen = false, false -- running also covers "about to start"
