@@ -1,7 +1,6 @@
-# ghostty's ghost (+boo): in the first shell after ghostty starts, and again after 20
-# minutes idle at the prompt. It needs 100+ columns: in a narrower window the font goes
-# 3 steps down (like Ctrl+- x3) through ghostty's AppleScript, then back to normal after q.
-# Above the instant prompt: it's interactive.
+# ghostty's ghost (+boo) after 20 minutes idle at the prompt. It needs 100+ columns: in a
+# narrower window the font goes 3 steps down (like Ctrl+- x3) through ghostty's
+# AppleScript, then back to normal after q. Above the instant prompt: it's interactive.
 if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
   _boo() {
     # wide enough already: no font change, so no zoom back after q
@@ -14,23 +13,6 @@ if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
     sleep 0.3 # let the window re-layout before boo measures it
     ghostty +boo
     osascript -e "tell application \"Ghostty\" to perform action \"reset_font_size\" on $term" >/dev/null 2>&1
-  }
-
-  () {
-    # walk up to the ghostty process: one marker per ghostty launch
-    local pid=$$ comm
-    while (( pid > 1 )); do
-      comm=$(ps -o comm= -p $pid) || return
-      [[ ${comm:t} == ghostty ]] && break
-      pid=$(ps -o ppid= -p $pid) || return
-      pid=${pid// /}
-    done
-    (( pid > 1 )) || return
-    local mark=${TMPDIR:-/tmp}/ghostty-boo-$pid
-    [[ -e $mark ]] && return
-    : > $mark
-    _boo
-    clear
   }
 
   # TMOUT only counts while the prompt waits for a key, never while nvim or another

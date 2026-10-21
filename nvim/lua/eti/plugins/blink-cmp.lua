@@ -90,8 +90,14 @@ return {
         preset = "cmdline",
         ["<Down>"] = { "select_next", "fallback" },
         ["<Up>"] = { "select_prev", "fallback" },
+        -- accept the selected suggestion, or the first one if none is selected
+        ["<Tab>"] = { "select_and_accept", "fallback" },
       },
-      completion = { menu = { auto_show = true } },
+      completion = {
+        menu = { auto_show = true },
+        -- blink preselects the first item in cmdline by default, so <Down> skipped straight to the second
+        list = { selection = { preselect = false, auto_insert = true } },
+      },
     },
   },
 }

@@ -28,6 +28,17 @@ return {
     picker = { enabled = true, ui_select = true }, -- nicer vim.ui.select (replaces dressing.nvim)
     lazygit = { enabled = true }, -- floating lazygit window
     notifier = { enabled = true }, -- vim.notify popups, noice shows its notify view here (replaces nvim-notify)
+    -- per-project/branch floating notes, as a plain box: rounded corners, no title or key hints
+    -- (scratch always sets a title, so it's cleared once the window exists; q still closes)
+    scratch = {
+      enabled = true,
+      ft = "markdown",
+      win = {
+        border = "rounded",
+        footer_keys = false,
+        on_win = function(self) vim.api.nvim_win_set_config(self.win, { title = "", footer = "" }) end,
+      },
+    },
     -- indent guides (replaces indent-blankline); the current scope is highlighted
     indent = {
       indent = { char = "┊" },
@@ -46,6 +57,8 @@ return {
       desc = "Save all and open lazygit",
     },
     { "<leader>rf", function() Snacks.rename.rename_file() end, desc = "Rename current file (LSP-aware)" },
+    { "<leader>.", function() Snacks.scratch() end, desc = "Toggle project scratch note" },
+    { "<leader>S", function() Snacks.scratch.select() end, desc = "Pick a scratch note" },
     {
       "<leader>tn",
       function()

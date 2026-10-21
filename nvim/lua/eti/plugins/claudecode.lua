@@ -147,22 +147,7 @@ return {
     }
   end,
   keys = {
-    { "<leader>c", nil, desc = "Claude Code" },
-    { "<leader>cc", open_claude("ClaudeCode"), desc = "Toggle Claude" },
-    { "<leader>cf", open_claude("ClaudeCodeFocus"), desc = "Focus Claude" },
-    { "<leader>cC", open_claude("ClaudeCode --continue"), desc = "Continue last conversation" },
-    { "<leader>cr", open_claude("ClaudeCode --resume"), desc = "Resume a conversation" },
-    { "<leader>cb", "<cmd>ClaudeCodeAdd %<cr>", desc = "Add buffer to Claude" },
-    { "<leader>cb", "<cmd>ClaudeCodeSend<cr>", mode = "v", desc = "Send selection to Claude" },
-    { "<leader>cb", "<cmd>ClaudeCodeTreeAdd<cr>", ft = "NvimTree", desc = "Add file to Claude" },
-    { "<leader>cy", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept Claude diff" },
-    { "<leader>cn", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Reject Claude diff" },
-
-    -- quick toggles inside the running session
-    { "<leader>cm", function() send_to_claude("\27p", false) end, desc = "Claude model (←/→ effort)" },
-    { "<leader>ce", function() send_to_claude("/effort", true) end, desc = "Claude effort" },
-    { "<leader>cs", function() send_to_claude("/sandbox", true) end, desc = "Claude sandbox" },
-    { "<leader>ct", function() send_to_claude("\27t", false) end, desc = "Claude thinking on/off" },
-    { "<leader>cp", function() send_to_claude("\27[Z", false) end, desc = "Claude next permission mode" },
+    -- same key as claude_hide inside the terminal, so one key opens and closes it
+    { "<C-q>", open_claude("ClaudeCode"), desc = "Toggle Claude" },
   },
 }

@@ -35,8 +35,22 @@ return {
         opts.desc = "See available code actions"
         keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
 
+        opts.desc = "Add missing imports"
+        keymap.set("n", "<leader>im", function()
+          -- imports every unresolved name in the file at once (ts_ls: source.addMissingImports.ts)
+          vim.lsp.buf.code_action({ context = { only = { "source.addMissingImports" }, diagnostics = {} }, apply = true })
+        end, opts)
+
         opts.desc = "Smart rename"
-        keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
+        keymap.set("n", "<leader>rn", function()
+          -- in Angular files both ts_ls and angularls support rename, and vim.lsp.buf.rename()
+          -- prompts once per client; ask once and hand the name to every client instead
+          vim.ui.input({ prompt = "New Name: ", default = vim.fn.expand("<cword>") }, function(name)
+            if name and name ~= "" then
+              vim.lsp.buf.rename(name)
+            end
+          end)
+        end, opts)
 
         opts.desc = "Show buffer diagnostics"
         keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file

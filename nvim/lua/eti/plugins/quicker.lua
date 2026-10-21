@@ -45,6 +45,7 @@ return {
         desc = "Show context around results",
       },
       { "<", function() require("quicker").collapse() end, desc = "Hide context" },
+      { "q", function() require("quicker").close() end, desc = "Close the list" },
     },
   },
 }
