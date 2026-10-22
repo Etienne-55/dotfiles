@@ -54,11 +54,79 @@ vim.api.nvim_create_autocmd("CmdlineLeave", {
 })
 keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlighting" })
 
--- replace the word under the cursor (or the selection) in the whole file: edit the replacement, <CR> to apply
+-- replace the word under the cursor (or the selection) in the whole file, asked in the same input
+-- box as <leader>rn. Every match shows the new text live while typing (drawn over the buffer, which
+-- only changes on <CR>); <Esc> cancels, and the cursor stays where it was either way
 -- keeppatterns: n/N keep searching what they did before
-keymap.set("n", "<leader>s", [[:<C-u>keeppatterns %s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "Replace word in file" })
+local preview_ns = vim.api.nvim_create_namespace("eti_replace_preview")
+local function replace_all(pattern, default)
+  local win, buf = vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
+  local view = vim.fn.winsaveview()
+  -- \C: case-sensitive like the I flag below; matched per line, so a multi-line selection
+  -- gets no preview but is still replaced
+  local matches = vim.fn.matchbufline(buf, [[\C]] .. pattern, 1, "$")
+  -- the preview hides each match and draws the new text in its place, on the cursor line too
+  local wo = { conceallevel = vim.wo[win].conceallevel, concealcursor = vim.wo[win].concealcursor }
+  vim.wo[win].conceallevel, vim.wo[win].concealcursor = 2, "nvic"
+
+  local done = false -- set once answered: the matches' positions are stale after the replace
+  local function preview(text)
+    vim.api.nvim_buf_clear_namespace(buf, preview_ns, 0, -1)
+    if done then
+      return
+    end
+    for _, m in ipairs(matches) do
+      vim.api.nvim_buf_set_extmark(buf, preview_ns, m.lnum - 1, m.byteidx, {
+        end_col = m.byteidx + #m.text,
+        conceal = "",
+        virt_text = { { text, "IncSearch" } },
+        virt_text_pos = "inline",
+      })
+    end
+  end
+
+  local function cleanup()
+    done = true
+    vim.api.nvim_buf_clear_namespace(buf, preview_ns, 0, -1)
+    if vim.api.nvim_win_is_valid(win) then
+      vim.wo[win].conceallevel, vim.wo[win].concealcursor = wo.conceallevel, wo.concealcursor
+    end
+  end
+
+  preview(default)
+  local input = vim.ui.input({ prompt = "Replace with: ", default = default }, function(text)
+    cleanup()
+    if not vim.api.nvim_win_is_valid(win) then
+      return
+    end
+    vim.api.nvim_win_call(win, function()
+      if text then
+        vim.cmd("keeppatterns %s/" .. pattern .. "/" .. vim.fn.escape(text, [[/\&~]]) .. "/gI")
+      end
+      vim.fn.winrestview(view)
+    end)
+  end)
+
+  -- snacks returns its input window; follow what's typed in it, and clean up however it closes
+  if type(input) == "table" and input.buf then
+    vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+      buffer = input.buf,
+      callback = function()
+        preview(input:text())
+      end,
+    })
+    vim.api.nvim_create_autocmd({ "BufWipeout", "BufHidden" }, { buffer = input.buf, once = true, callback = cleanup })
+  end
+end
+keymap.set("n", "<leader>s", function()
+  local word = vim.fn.expand("<cword>")
+  replace_all([[\V\<]] .. vim.fn.escape(word, [[/\]]) .. [[\>]], word)
+end, { desc = "Replace word in file" })
 -- yank into "z so the clipboard is untouched; \V + escape makes the selection literal
-keymap.set("x", "<leader>s", [["zy:<C-u>keeppatterns %s/\V<C-r>=escape(@z, '/\')<CR>//gI<Left><Left><Left>]], { desc = "Replace selection in file" })
+keymap.set("x", "<leader>s", function()
+  vim.cmd('noautocmd normal! "zy')
+  replace_all([[\V]] .. vim.fn.escape(vim.fn.getreg("z"), [[/\]]):gsub("\n", [[\n]]), "")
+end, { desc = "Replace selection in file" })
 
 keymap.set("n", "<leader>T", vim.treesitter.inspect_tree, { desc = "Inspect Treesitter tree" })
 

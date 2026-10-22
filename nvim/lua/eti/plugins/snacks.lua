@@ -28,11 +28,13 @@ return {
     picker = { enabled = true, ui_select = true }, -- nicer vim.ui.select (replaces dressing.nvim)
     lazygit = { enabled = true }, -- floating lazygit window
     notifier = { enabled = true }, -- vim.notify popups, noice shows its notify view here (replaces nvim-notify)
-    -- per-project/branch floating notes, as a plain box: rounded corners, no title or key hints
-    -- (scratch always sets a title, so it's cleared once the window exists; q still closes)
+    -- one global floating note (same file from any directory/branch), as a plain box: rounded
+    -- corners, no title or key hints (scratch always sets a title, so it's cleared once the
+    -- window exists; q still closes)
     scratch = {
       enabled = true,
       ft = "markdown",
+      filekey = { cwd = false, branch = false, count = false },
       win = {
         border = "rounded",
         footer_keys = false,
@@ -57,7 +59,7 @@ return {
       desc = "Save all and open lazygit",
     },
     { "<leader>rf", function() Snacks.rename.rename_file() end, desc = "Rename current file (LSP-aware)" },
-    { "<leader>.", function() Snacks.scratch() end, desc = "Toggle project scratch note" },
+    { "<leader>.", function() Snacks.scratch() end, desc = "Toggle global scratch note" },
     { "<leader>S", function() Snacks.scratch.select() end, desc = "Pick a scratch note" },
     {
       "<leader>tn",

@@ -117,15 +117,16 @@ alias dbui='vim +DBUI'
 
 # `git diff dev` / `git diff master`: everything this branch changed (commits and
 # uncommitted work) since it left origin's develop/master, fetched first, in nvim's
-# diffview (q quits). `dev` is short for develop. Paths, commits and every other git
-# command run as usual.
+# diffview (q quits). `dev` is short for develop. `git diff dev --no-specs` hides
+# *.spec.* files. Paths, commits and every other git command run as usual.
 git() {
-  if [[ $1 == diff && $# -eq 2 && $2 != -* && ! -e $2 ]]; then
-    local base=$2
+  if [[ $1 == diff && $2 != -* && ! -e $2 && ( $# -eq 2 || ( $# -eq 3 && $3 == --no-specs ) ) ]]; then
+    local base=$2 pathspec=
     [[ $base == dev ]] && base=develop
+    [[ $3 == --no-specs ]] && pathspec=" -- :(exclude,glob)**/*.spec.*"
     if command git rev-parse --verify --quiet "refs/remotes/origin/$base" >/dev/null; then
       command git fetch --quiet origin "$base" || print -u2 "fetch failed, using the last fetched origin/$base"
-      nvim "+DiffviewOpen $(command git merge-base "origin/$base" HEAD)" "+autocmd User DiffviewViewClosed qall"
+      nvim "+DiffviewOpen $(command git merge-base "origin/$base" HEAD)$pathspec" "+autocmd User DiffviewViewClosed qall"
       return
     fi
   fi
