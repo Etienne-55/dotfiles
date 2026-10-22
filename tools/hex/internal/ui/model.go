@@ -63,6 +63,8 @@ type Model struct {
 
 	help   help.Model
 	status string // result of the last action, until the next key
+
+	frame int // of the logo's flames
 }
 
 func NewModel(configDir string, popup bool) Model {
@@ -85,7 +87,7 @@ func NewModel(configDir string, popup bool) Model {
 	return m
 }
 
-func (m Model) Init() tea.Cmd { return nil }
+func (m Model) Init() tea.Cmd { return flameTick() }
 
 // load reads the bindings, and the tabs of the categories that have some.
 func (m *Model) load() {

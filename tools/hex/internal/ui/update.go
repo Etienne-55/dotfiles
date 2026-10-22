@@ -18,6 +18,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.scrollToSelection()
 		return m, nil
 
+	case flameMsg:
+		m.frame++
+		return m, flameTick()
+
 	case editedMsg:
 		// the definition may have changed: read the config again
 		m.reload()

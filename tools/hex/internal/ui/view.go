@@ -52,7 +52,7 @@ func (m Model) renderHeader(w int) []string {
 	var logo []string
 	for _, rows := range [][]string{bigLogo, miniLogo} {
 		if len(rows) <= n && w-lipgloss.Width(rows[0])-gap >= 40 {
-			logo = strings.Split(renderLogo(rows), "\n")
+			logo = strings.Split(renderLogo(rows, m.frame), "\n")
 			break
 		}
 	}
