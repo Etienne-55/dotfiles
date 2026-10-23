@@ -316,6 +316,24 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
+-- The cursor is hidden on the dashboard: a cursor group with blend=100 hides it,
+-- in normal mode only so the cmdline still shows one
+local saved_guicursor
+vim.api.nvim_create_augroup("DashboardCursor", { clear = true })
+
+local function hide_cursor()
+  vim.api.nvim_set_hl(0, "DashboardHiddenCursor", { blend = 100, nocombine = true }) -- a colorscheme may have cleared it
+  saved_guicursor = saved_guicursor or vim.o.guicursor
+  vim.o.guicursor = saved_guicursor .. ",n:DashboardHiddenCursor"
+end
+
+local function show_cursor()
+  if saved_guicursor then
+    vim.o.guicursor = saved_guicursor
+    saved_guicursor = nil
+  end
+end
+
 -- q or Esc quits nvim back to the terminal (snacks sets its filetype with
 -- events off, so a FileType autocmd never fires; map on open instead)
 vim.api.nvim_create_autocmd("User", {
@@ -325,6 +343,12 @@ vim.api.nvim_create_autocmd("User", {
       if vim.bo[buf].filetype == "snacks_dashboard" then
         for _, key in ipairs({ "q", "<esc>" }) do
           vim.keymap.set("n", key, "<cmd>qa<cr>", { buffer = buf, nowait = true, silent = true })
+        end
+        vim.api.nvim_clear_autocmds({ group = "DashboardCursor", buffer = buf })
+        vim.api.nvim_create_autocmd("BufEnter", { group = "DashboardCursor", buffer = buf, callback = hide_cursor })
+        vim.api.nvim_create_autocmd({ "BufLeave", "BufWipeout" }, { group = "DashboardCursor", buffer = buf, callback = show_cursor })
+        if vim.api.nvim_get_current_buf() == buf then
+          hide_cursor()
         end
       end
     end

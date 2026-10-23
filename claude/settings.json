@@ -1,6 +1,10 @@
 {
   "model": "opus",
   "cleanupPeriodDays": 30,
+  "statusLine": {
+    "type": "command",
+    "command": "~/dotfiles/claude/statusline.sh"
+  },
   "hooks": {
     "Stop": [
       {
@@ -65,5 +69,5 @@
       "effortLevel": "high"
     }
   },
-  "theme": "dark"
+  "theme": "custom:neon"
 }

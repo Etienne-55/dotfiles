@@ -1,0 +1,8 @@
+{
+  "name": "Neon",
+  "base": "dark",
+  "overrides": {
+    "promptBorder": "#E89A62",
+    "promptBorderShimmer": "#F2BC94"
+  }
+}

@@ -24,7 +24,7 @@ var rules = []rule{
 	{file: re(`^(lspconfig|mason)\.lua$`), cat: LSP},
 	{file: re(`^trouble\.lua$`), cat: Diagnostics},
 	{file: re(`^claudecode\.lua$`), cat: Claude},
-	{file: re(`^(harpoon|flash|oil|nvim-tree|todo-comments)\.lua$`), cat: Navigation},
+	{file: re(`^(recent|flash|oil|nvim-tree|todo-comments)\.lua$`), cat: Navigation},
 	{file: re(`^blink-cmp\.lua$`), cat: Completion},
 	{file: re(`^(surround|formatting|treesitter|undotree|autopairs|autotag|quicker)\.lua$`), cat: Editing},
 	{file: re(`^snacks\.lua$`), desc: re(`(?i)^rename`), cat: Editing},

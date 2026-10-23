@@ -45,7 +45,18 @@ return {
         keymap.set("n", "<leader>rn", function()
           -- in Angular files both ts_ls and angularls support rename, and vim.lsp.buf.rename()
           -- prompts once per client; ask once and hand the name to every client instead
-          vim.ui.input({ prompt = "New Name: ", default = vim.fn.expand("<cword>") }, function(name)
+          -- red box with a warning icon: it renames every reference, across files
+          vim.ui.input({
+            prompt = "Replace all",
+            default = vim.fn.expand("<cword>"),
+            icon = " ",
+            win = {
+              wo = {
+                winhighlight = "NormalFloat:SnacksInputNormal,FloatBorder:DiagnosticError,FloatTitle:DiagnosticError,"
+                  .. "SnacksInputTitle:DiagnosticError,SnacksInputPrompt:DiagnosticError,SnacksInputIcon:DiagnosticError",
+              },
+            },
+          }, function(name)
             if name and name ~= "" then
               vim.lsp.buf.rename(name)
             end
@@ -85,7 +96,7 @@ return {
       update_in_insert = false,
       signs = {
         text = {
-          [vim.diagnostic.severity.ERROR] = " ",
+          [vim.diagnostic.severity.ERROR] = " ",
           [vim.diagnostic.severity.WARN] = " ",
           [vim.diagnostic.severity.HINT] = "󰠠 ",
           [vim.diagnostic.severity.INFO] = " ",

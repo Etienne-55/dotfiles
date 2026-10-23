@@ -61,11 +61,12 @@ return {
     },
     -- Configure message routing to make them less intrusive
     routes = {
-      -- Hide "written" messages
+      -- Hide "written" messages (the save shows as a green file name in lualine instead);
+      -- nvim 0.12 sends them with kind "bufwrite", older versions with no kind
       {
         filter = {
           event = "msg_show",
-          kind = "",
+          kind = { "", "bufwrite" },
           find = "written",
         },
         opts = { skip = true },
@@ -122,7 +123,8 @@ return {
 
     -- the cmdline popup border slowly fades through the syntax colors while the
     -- cmdline is open, like the `git push` rainbow in zshrc. Every per-kind border
-    -- links to NoiceCmdlinePopupBorder, except search which has its own group.
+    -- links to NoiceCmdlinePopupBorder, except search which has its own group and
+    -- stays purple.
     local p = require("eti.core.palette")
     local colors = { p.purple, p.magenta, p.red, p.orange, p.yellow, p.green, p.cyan, p.blue }
     local STEP_MS = 50
@@ -148,7 +150,7 @@ return {
       local i = math.floor(frame / FADE_STEPS)
       local color = mix(colors[i % #colors + 1], colors[(i + 1) % #colors + 1], (frame % FADE_STEPS) / FADE_STEPS)
       vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { fg = color })
-      vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorderSearch", { fg = color })
+      vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorderSearch", { fg = p.purple })
     end
 
     local timer = assert(vim.uv.new_timer())
