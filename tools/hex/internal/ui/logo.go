@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// bigLogo is HEX in ANSI Shadow letters, the font of gaufre's logo.
+// bigLogo is HEX in ANSI Shadow letters.
 var bigLogo = []string{
 	"██╗  ██╗███████╗██╗  ██╗",
 	"██║  ██║██╔════╝╚██╗██╔╝",
@@ -21,7 +21,7 @@ var bigLogo = []string{
 	"╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝",
 }
 
-// miniLogo is the same two rows high, like gaufre's mini logo, for
+// miniLogo is the same two rows high, for
 // terminals too short for the big one.
 var miniLogo = []string{
 	"█ █ █▀▀ ▀▄▀",

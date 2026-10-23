@@ -52,5 +52,5 @@ ones, and `git config --global` writes there, never into this repo.
 
 
 
-The tmux popups prefix + e (gaufre) and prefix + Space (hex) run the binaries in
-`tools/` straight from `~/dotfiles`, so they need no install step.
+The tmux popup prefix + Space (hex) runs the binary in `tools/hex` straight from
+`~/dotfiles`, so it needs no install step.

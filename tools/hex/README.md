@@ -1,8 +1,7 @@
 # Hex
 
 A cheat sheet of every key binding in this config: neovim, tmux and zsh.
-Built with Go and Bubble Tea, like [gaufre](../gaufre), and opened the same way:
-a tmux popup.
+Built with Go and Bubble Tea, and opened in a tmux popup.
 
 It reads the config each time it opens instead of keeping its own list, so a
 binding you add or change shows up without rebuilding anything.
