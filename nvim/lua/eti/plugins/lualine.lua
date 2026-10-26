@@ -28,20 +28,33 @@ return {
       },
     }
 
-    -- save state after the file name (instead of lualine's [+]): an orange save icon while
-    -- there are unsaved changes, a green save-check icon once the file is saved
-    local filename = { "filename", path = 4, symbols = { modified = "" } }
+    -- save state after the file name (instead of lualine's [+]): an orange disk while there are
+    -- unsaved changes (the plain disk: the alert one is drawn smaller), a green save-check disk
+    -- once the file is saved
+    local filename = {
+      "filename",
+      path = 4,
+      symbols = { modified = "" },
+      -- lualine still adds the space before the (now empty) modified marker, which pushed the
+      -- disk one cell right while the file was unsaved
+      fmt = function(name) return (name:gsub("%s+$", "")) end,
+    }
     local save_state = {
       function()
-        return vim.bo.modified and "󰽃" or "󱣫"
+        return vim.bo.modified and "󰆓" or "󱣪"
       end,
       color = function()
         return { fg = vim.bo.modified and p.orange or p.green }
       end,
+      -- files only, not the dashboard, oil, nvim-tree, help or quickfix
+      cond = function()
+        return vim.bo.buftype == ""
+      end,
       padding = { left = 0, right = 1 },
     }
-    -- hint and error counts right after the file name, count first: "file.txt 2 3"
-    -- (warnings and infos stay with the diagnostics further right)
+    -- diagnostic counts right after the file name, count first and mildest first:
+    -- "file.txt 1 4 3󰃤" (infos, warnings, errors; no hints; the info, warning and
+    -- error icons are the gutter signs in lsp/lspconfig.lua)
     local function diagnostic_count(severity, icon, color)
       local function count()
         return #vim.diagnostic.get(0, { severity = severity })
@@ -53,8 +66,9 @@ return {
         padding = { left = 0, right = 1 },
       }
     end
-    local hints = diagnostic_count(vim.diagnostic.severity.HINT, "", p.green)
-    local errors = diagnostic_count(vim.diagnostic.severity.ERROR, "", p.red)
+    local infos = diagnostic_count(vim.diagnostic.severity.INFO, "", p.cyan)
+    local warnings = diagnostic_count(vim.diagnostic.severity.WARN, "", p.yellow)
+    local errors = diagnostic_count(vim.diagnostic.severity.ERROR, "󰃤", p.red)
 
     local opts = {
       options = {
@@ -65,15 +79,9 @@ return {
       sections = {
         -- the current file (parent dir + name only, so diagnostics fit), then the last 3 other
         -- files, <leader>1-3 to open (extras/recent.lua). No branch: the tmux bar shows it.
-        lualine_b = { filename, save_state, hints, errors, { require("eti.extras.recent").component } },
+        lualine_b = { filename, save_state, infos, warnings, errors, { require("eti.extras.recent").component } },
         lualine_c = {
           "diff",
-          {
-            "diagnostics",
-            sections = { "warn", "info" }, -- errors and hints are next to the file name
-            -- same icons as the gutter signs in lsp/lspconfig.lua
-            symbols = { error = " ", warn = " ", info = " ", hint = "󰠠 " },
-          },
         },
         lualine_x = {
           -- show macro recording: noice hides the "recording @q" message, and nvim-autopairs

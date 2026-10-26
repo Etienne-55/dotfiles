@@ -95,6 +95,8 @@ keybind = super+p=text:\x02p
 keybind = super+i=text:\x02i
 # hex cheat sheet (Cmd+Space is Spotlight)
 keybind = super+slash=text:\x02\x20
+# tuicr review of uncommitted changes
+keybind = super+e=text:\x02e
 
 # Cmd+r reloads both the ghostty and tmux configs
 keybind = super+r=reload_config

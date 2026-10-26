@@ -61,6 +61,7 @@ link tmux/tmux-cht.sh "$HOME/.tmux-cht.sh"
 link tmux/tmux-cht-languages "$HOME/.tmux-cht-languages"
 link tmux/tmux-cht-command   "$HOME/.tmux-cht-command"
 link ghostty         "$HOME/.config/ghostty"
+link tuicr           "$HOME/.config/tuicr"
 # real dir (not a symlink into this repo) so claude doesn't think it's in a git project
 mkdir -p "$HOME/.claude-chat"
 link claude/chat.md "$HOME/.claude-chat/CLAUDE.md"

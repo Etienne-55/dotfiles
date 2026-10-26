@@ -1,0 +1,57 @@
+# Neon for tuicr: the palette of ghostty/themes/Neon and nvim/lua/eti/core/palette.lua.
+# Diff lines use the classic red/green of delta (git/gitconfig) and diffview, so a
+# diff looks the same in all three. Backgrounds show ghostty's glass through them
+# (tuicr's transparent_background is on by default); panel_bg only shows when it's off.
+panel_bg = "#06030B"
+bg_highlight = "#1A0D2C"
+fg_primary = "#DCD3F0"
+fg_secondary = "#B3A8CC"
+fg_dim = "#6B5A8E"
+
+diff_add = "#3FB950"
+diff_add_bg = "#173A22"
+diff_del = "#F85149"
+diff_del_bg = "#4A1A1D"
+diff_context = "#A39DB3"
+diff_hunk_header = "#8A82A0"
+expanded_context_fg = "#6B5A8E"
+
+syntax_add_bg = "#173A22"
+syntax_del_bg = "#4A1A1D"
+# code colors of nvim's tokyonight neon style, resolved relative to this file
+syntax_theme = "neon-syntax.tmTheme"
+
+file_added = "#6FE0B0"
+file_modified = "#E8D287"
+file_deleted = "#E8668E"
+file_renamed = "#A884E8"
+
+reviewed = "#6FE0B0"
+pending = "#E8D287"
+
+comment_note = "#8285E0"
+comment_suggestion = "#5CCFD4"
+comment_issue = "#E8668E"
+comment_praise = "#6FE0B0"
+
+border_focused = "#9677D6"
+border_unfocused = "#2E2045"
+selection_marker = "#E07AC8"
+status_bar_bg = "#120A1E"
+cursor_color = "#E07AC8"
+cursor_line_bg = "#2E1A4D"
+# hot pink branch, like the nvim dashboard
+branch_name = "#E07AC8"
+help_indicator = "#8A79AD"
+
+message_info_fg = "#06030B"
+message_info_bg = "#8285E0"
+message_warning_fg = "#06030B"
+message_warning_bg = "#E8D287"
+message_error_fg = "#06030B"
+message_error_bg = "#E8668E"
+update_badge_fg = "#06030B"
+update_badge_bg = "#E8D287"
+
+mode_fg = "#06030B"
+mode_bg = "#C978B8"

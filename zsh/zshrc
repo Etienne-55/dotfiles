@@ -165,6 +165,8 @@ alias pd='pbpaste | nvim -'
 alias ls="eza --color=always --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
 # eza colors: calm truecolor trio (muted teal folders, soft peach source files, lavender-grey plain files)
 # fixed across Ghostty themes; the remaining ANSI codes follow the theme (Neon or TokyoNight)
+# eza icon overrides (Ferris for .rs, like nvim) live in eza/theme.yml
+export EZA_CONFIG_DIR="$HOME/dotfiles/eza"
 export EZA_COLORS="di=1;38;2;126;184;186:sc=38;2;217;160;122:fi=38;2;179;168;204:ex=1;32:ln=3;38;2;179;168;204:or=31:bu=1;38;2;179;168;204:im=35:vi=35:mu=35:lo=35:co=31:tm=90:cm=90:ga=32:gm=36:gd=31:gv=35:gt=35:gi=90:gc=1;31:xx=90"
 
 eval "$(zoxide init zsh)"

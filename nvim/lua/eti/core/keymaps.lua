@@ -101,7 +101,7 @@ local function replace_all(pattern, default)
     end
     vim.api.nvim_win_call(win, function()
       if text then
-        vim.cmd("keeppatterns %s/" .. pattern .. "/" .. vim.fn.escape(text, [[/\&~]]) .. "/gI")
+        vim.cmd("keeppatterns %s/" .. pattern .. "/" .. vim.fn.escape(text, [[/\&~]]) .. "/gIe")
       end
       vim.fn.winrestview(view)
     end)

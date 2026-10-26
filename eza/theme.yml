@@ -1,0 +1,6 @@
+# eza theme (EZA_CONFIG_DIR in zsh/zshrc points here); colors stay in EZA_COLORS there,
+# this only overrides icons
+extensions:
+  rs:
+    icon:
+      glyph: "" # Ferris the crab (nf-linux-ferris), like in nvim

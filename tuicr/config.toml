@@ -1,0 +1,4 @@
+# tuicr, the code review TUI. Linked to ~/.config/tuicr by bootstrap.sh.
+theme = "neon"
+# plain q quits, like diffview (:q and ZZ still work)
+q_quits = true

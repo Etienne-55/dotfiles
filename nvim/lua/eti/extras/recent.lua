@@ -109,13 +109,14 @@ function M.setup()
     table.insert(history, 1, vim.api.nvim_buf_get_name(0))
   end
 
-  for i = 1, SHOWN do
-    vim.keymap.set("n", "<leader>" .. i, function()
-      local path = others()[i]
+  -- spelled out (not `for i = 1, SHOWN`) so hex can read the loop and list <leader>1-3
+  for _, n in ipairs({ "1", "2", "3" }) do
+    vim.keymap.set("n", "<leader>" .. n, function()
+      local path = others()[tonumber(n)]
       if path then
         vim.cmd.edit(vim.fn.fnameescape(path))
       end
-    end, { desc = "Go to recent file " .. i })
+    end, { desc = "Go to recent file " .. n })
   end
 end
 

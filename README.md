@@ -45,6 +45,7 @@ ones, and `git config --global` writes there, never into this repo.
 | `tmux/tmux.conf` | `~/.tmux.conf` |
 | `tmux/tmux-cht.sh` (+ `-languages`, `-command`) | `~/.tmux-cht.sh` (prefix + i cheat sheet) |
 | `ghostty/` | `~/.config/ghostty/` (terminal config + the Neon theme) |
+| `tuicr/` | `~/.config/tuicr/` (code review TUI config + the Neon theme) |
 | `git/gitconfig` | included from `~/.gitconfig` |
 | `claude/settings.json` | `~/.claude/settings.json` (Claude Code settings, including the sounds it plays when it's done) |
 | `claude/chat.md` | `~/.claude-chat/CLAUDE.md` (the prefix + p claude popup) |
