@@ -1,0 +1,47 @@
+# peaclock config, matches the dotfiles tmux/nvim palette
+# opened by prefix + C or Cmd+Shift+c (tmux popup): peaclock --config-dir ~/dotfiles/tools/peaclock
+#
+# peaclock is not in homebrew, build it (needs cmake + icu4c from brew):
+#   git clone --depth 1 https://github.com/octobanana/peaclock && cd peaclock
+#   sed -i '' '/STREQUAL "AppleClang")/{n;d;}' CMakeLists.txt   # drop the hard "AppleClang unsupported" error
+#   mkdir build && cd build
+#   cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-I/opt/homebrew/opt/icu4c/include -DCMAKE_EXE_LINKER_FLAGS=-L/opt/homebrew/opt/icu4c/lib
+#   make -j8 && cp peaclock ~/.local/bin/
+
+mode clock
+view binary
+
+# fill the popup, no fixed aspect ratio
+block 2 1
+padding 1 1
+margin 1 0
+ratio 2 1
+set auto-size on
+set auto-ratio off
+
+fill ''
+date '%a %d %b'
+date-padding 1
+
+set hour-24 on
+set seconds off
+set date off
+
+toggle active-bg
+rate-input 50
+rate-refresh 1000
+rate-status 5000
+
+# lit bits slowly drift through hues (candy), unlit bits faint so the 8-4-2-1 rows stay readable
+style active-fg clear
+style inactive-fg clear
+style colon-fg clear
+style active-bg candy
+style inactive-bg #2E2045
+style colon-bg #E8D287
+style date #6B5A8E
+style background clear
+style text #DCD3F0
+style prompt #9677D6
+style success #6FE0B0
+style error #E8668E

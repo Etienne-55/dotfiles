@@ -42,6 +42,10 @@ source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
+# Ctrl-R searches atuin's history (unlimited, shared across tmux panes, filterable by
+# directory); ↑ keeps the plain zsh history walk
+eval "$(atuin init zsh --disable-up-arrow)"
+
 # `git push` on the command line glows in a moving rainbow. A background ticker
 # (zle -F on a pipe that prints every 80ms) shifts the colors while the line
 # matches; it stops when the line changes or runs. Hooked after the syntax

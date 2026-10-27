@@ -1,3 +1,5 @@
+# Improved shell history for zsh, bash, fish and nushell
+brew "atuin"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find

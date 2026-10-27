@@ -83,8 +83,6 @@ keybind = super+a=text:\x02n
 keybind = super+shift+a=text:\x02N
 # delete window, no confirm
 keybind = super+shift+d=text:\x02X
-# pick a window/session from a tree
-keybind = super+w=text:\x02w
 # rename window
 keybind = super+comma=text:\x02,
 
@@ -97,6 +95,8 @@ keybind = super+i=text:\x02i
 keybind = super+slash=text:\x02\x20
 # tuicr review of uncommitted changes
 keybind = super+e=text:\x02e
+# binary clock (peaclock)
+keybind = super+w=text:\x02C
 
 # Cmd+r reloads both the ghostty and tmux configs
 keybind = super+r=reload_config
