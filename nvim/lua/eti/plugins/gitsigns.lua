@@ -19,8 +19,16 @@ return {
       map("n", "]h", nav("next"), "Next Hunk")
       map("n", "[h", nav("prev"), "Prev Hunk")
       -- shift+[ / shift+] too; normal mode only, so d} / v} keep their paragraph motion
-      map("n", "}", nav("next"), "Next Hunk")
-      map("n", "{", nav("prev"), "Prev Hunk")
+      -- these two also flash the minimap (extras/minimap.lua)
+      local function nav_with_minimap(direction)
+        local jump = nav(direction)
+        return function()
+          jump()
+          require("eti.extras.minimap").peek()
+        end
+      end
+      map("n", "}", nav_with_minimap("next"), "Next Hunk")
+      map("n", "{", nav_with_minimap("prev"), "Prev Hunk")
 
       -- Actions
       map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")

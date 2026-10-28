@@ -24,7 +24,28 @@ return {
         keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
 
         opts.desc = "Show LSP definitions"
-        keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts) -- show lsp definitions
+        keymap.set("n", "gd", function()
+          -- center (zz) on the definition. One result: telescope jumps once the LSP answers
+          -- (async), so center on the next cursor move; the timer drops it if nothing jumps.
+          -- Several results: a picker opens instead, and its <CR> centers after the edit.
+          local center = vim.api.nvim_create_autocmd("CursorMoved", {
+            once = true,
+            command = "normal! zz",
+          })
+          local picker
+          local function cancel()
+            pcall(vim.api.nvim_del_autocmd, center)
+            pcall(vim.api.nvim_del_autocmd, picker)
+          end
+          picker = vim.api.nvim_create_autocmd("User", { pattern = "TelescopeFindPre", once = true, callback = cancel })
+          vim.defer_fn(cancel, 2000)
+          require("telescope.builtin").lsp_definitions({
+            attach_mappings = function()
+              require("telescope.actions").select_default:enhance({ post = function() vim.cmd("normal! zz") end })
+              return true
+            end,
+          })
+        end, opts) -- show lsp definitions
 
         opts.desc = "Show LSP implementations"
         keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
@@ -78,6 +99,7 @@ return {
         keymap.set("n", "]d", function()
           vim.diagnostic.jump({ count = 1, float = true })
         end, opts) -- jump to next diagnostic in buffer
+        -- ( / ) jump line by line between diagnostics: core/keymaps.lua
 
         opts.desc = "Show documentation for what is under cursor"
         keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor

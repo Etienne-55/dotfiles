@@ -3,8 +3,12 @@ return {
   "nvim-treesitter/nvim-treesitter-context",
   event = { "BufReadPre", "BufNewFile" },
   opts = {
-    max_lines = 3, -- never take more than 3 lines of the window
-    trim_scope = "outer", -- when nested too deep, drop the outermost headers first
+    max_lines = 1, -- a single line: just the outermost class/function
+    multiwindow = true, -- keep it in the code window when focus moves to another split (Claude panel)
+    -- follow the top of the screen, not the cursor (like VS Code's sticky scroll):
+    -- moving around what's on screen doesn't change the header
+    mode = "topline",
+    trim_scope = "inner", -- when nested, drop the innermost headers first, keeping the big structure
   },
   keys = {
     -- [c is taken by diff hunks, so jump to the context line with [x

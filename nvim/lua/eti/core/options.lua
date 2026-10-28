@@ -4,6 +4,8 @@ local opt = vim.opt
 
 opt.relativenumber = true
 opt.number = true
+-- signs, then the number; the sticky header's line shows its real number (extras/statuscol.lua)
+opt.statuscolumn = "%s%{%v:lua.require'eti.extras.statuscol'.number()%}"
 
 -- tabs & indentation
 opt.tabstop = 2 -- 2 spaces for tabs (prettier default)
@@ -12,6 +14,8 @@ opt.expandtab = true -- expand tab to spaces
 opt.autoindent = true -- copy indent from current line when starting new one
 
 opt.wrap = false
+
+opt.fillchars:append({ eob = " " }) -- no ~ on the empty lines past the end of a buffer
 
 -- search settings
 opt.ignorecase = true -- ignore case when searching

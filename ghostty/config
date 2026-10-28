@@ -6,6 +6,8 @@
 theme = Neon
 # read theme hex values as Display P3: more saturated on the MacBook's P3 screen
 window-colorspace = display-p3
+# lift only near-invisible colors (e.g. palette 8 #5A4A78) off the dark background
+minimum-contrast = 1.1
 # no image: the window is frosted glass over the macOS desktop wallpaper
 
 # -------------------------------------------------------------------- font
@@ -20,9 +22,9 @@ adjust-cell-height = 10%
 # no title bar, still resizable; tmux windows act as tabs
 macos-titlebar-style = hidden
 maximize = true
-# 80% opaque + native macOS 26 liquid glass
-background-opacity = 0.8
-background-blur = macos-glass-regular
+# 90% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
+background-opacity = 0.9
+background-blur = 20
 # animated starfield over the dark cells (shaders/starfield.glsl, path relative to this file)
 custom-shader = shaders/starfield.glsl
 custom-shader-animation = true

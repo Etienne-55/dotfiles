@@ -343,8 +343,7 @@ vim.api.nvim_create_autocmd("User", {
       if vim.bo[buf].filetype == "snacks_dashboard" then
         for _, key in ipairs({ "q", "<esc>" }) do
           vim.keymap.set("n", key, "<cmd>qa<cr>", { buffer = buf, nowait = true, silent = true })
-        end
-        vim.api.nvim_clear_autocmds({ group = "DashboardCursor", buffer = buf })
+        end        vim.api.nvim_clear_autocmds({ group = "DashboardCursor", buffer = buf })
         vim.api.nvim_create_autocmd("BufEnter", { group = "DashboardCursor", buffer = buf, callback = hide_cursor })
         vim.api.nvim_create_autocmd({ "BufLeave", "BufWipeout" }, { group = "DashboardCursor", buffer = buf, callback = show_cursor })
         if vim.api.nvim_get_current_buf() == buf then

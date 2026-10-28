@@ -26,13 +26,54 @@ keymap.set({ "n", "x" }, "<C-Up>", "<C-u>zz")
 keymap.set("n", "<M-Down>", "<C-d>zz")
 keymap.set("n", "<M-Up>", "<C-u>zz")
 -- page keys (fn+arrows on a mac, shift+arrows) would leave the cursor on the
--- top/bottom line; make them the same centered half-page scroll
-for _, key in ipairs({ "<PageDown>", "<S-Down>" }) do
-  keymap.set({ "n", "x" }, key, "<C-d>zz")
+-- top/bottom line; make them the same centered half-page scroll.
+-- shift+arrows also flash the minimap (extras/minimap.lua)
+keymap.set({ "n", "x" }, "<PageDown>", "<C-d>zz")
+keymap.set({ "n", "x" }, "<PageUp>", "<C-u>zz")
+local function scroll_with_minimap(key, scroll)
+  keymap.set({ "n", "x" }, key, function()
+    require("eti.extras.minimap").peek()
+    return scroll
+  end, { expr = true })
 end
-for _, key in ipairs({ "<PageUp>", "<S-Up>" }) do
-  keymap.set({ "n", "x" }, key, "<C-u>zz")
+scroll_with_minimap("<S-Down>", "<C-d>zz")
+scroll_with_minimap("<S-Up>", "<C-u>zz")
+
+-- shift+9 / shift+0: previous/next line with a diagnostic (several on one line
+-- count once), wrapping around; centered like the {/} hunk jumps, and flashes the
+-- minimap. Set for every buffer so ( / ) never fall back to the sentence motion;
+-- normal mode only, so d) / v) keep it.
+local function jump_diagnostic_line(dir)
+  local diags = vim.diagnostic.get(0)
+  if #diags == 0 then
+    return
+  end
+  local lines = {} -- line -> first column with a diagnostic on it
+  for _, d in ipairs(diags) do
+    lines[d.lnum] = math.min(lines[d.lnum] or math.huge, d.col)
+  end
+  local sorted = vim.tbl_keys(lines)
+  table.sort(sorted)
+
+  local cur = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local target = dir > 0 and sorted[1] or sorted[#sorted] -- wrap around
+  for i = dir > 0 and 1 or #sorted, dir > 0 and #sorted or 1, dir do
+    if (sorted[i] - cur) * dir > 0 then
+      target = sorted[i]
+      break
+    end
+  end
+
+  vim.cmd("normal! m'") -- jumplist, like the built-in jumps
+  vim.api.nvim_win_set_cursor(0, { target + 1, lines[target] })
+  vim.cmd("normal! zz")
+  -- after zz, so it sits next to the centered line. focus = false: pressed again
+  -- before the old popup closes, open_float would move the cursor into it
+  vim.diagnostic.open_float({ focus = false })
+  require("eti.extras.minimap").peek()
 end
+keymap.set("n", "(", function() jump_diagnostic_line(-1) end, { desc = "Previous line with a diagnostic" })
+keymap.set("n", ")", function() jump_diagnostic_line(1) end, { desc = "Next line with a diagnostic" })
 
 -- search: <CR> on a / or ? search centers the match (n/N/*/# do too, in
 -- plugins/hlslens); <Esc> clears the highlight.

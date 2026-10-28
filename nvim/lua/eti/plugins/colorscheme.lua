@@ -32,6 +32,14 @@ return {
         hl.LineNrAbove = { fg = p.dark5 }
         hl.LineNrBelow = { fg = p.dark5 }
         hl.CursorLineNr = { fg = p.border_prompt, bold = true }
+        -- sticky header (treesitter-context): no bg, it looked like a visual selection;
+        -- a thin underline marks where it ends and the code starts
+        hl.TreesitterContext = { bg = "NONE" }
+        hl.TreesitterContextLineNumber = { fg = p.dark5 }
+        hl.TreesitterContextBottom = { underline = true, sp = p.dark3 }
+        hl.TreesitterContextLineNumberBottom = { fg = p.dark5, underline = true, sp = p.dark3 }
+        -- minimap cursor: the default CursorLine bg is too dark to spot in the minimap
+        hl.NeominimapCursorLine = { bg = p.blue0 }
         -- dashboard branch and worktree in neon: hot pink branch, purple folder, cyan icon
         hl.SnacksDashboardFile = { fg = p.magenta, bold = true }
         hl.SnacksDashboardDir = { fg = p.purple }
