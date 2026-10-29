@@ -80,9 +80,10 @@ keybind = super+bracket_left=text:\x02[
 # a s d sit next to the z x c v edit keys, which keep their usual meaning
 # new window
 keybind = super+s=text:\x02c
-# next / previous window
+# next / previous window (Cmd+q replaces quit; quit from the menu bar)
 keybind = super+a=text:\x02n
 keybind = super+shift+a=text:\x02N
+keybind = super+q=text:\x02N
 # delete window, no confirm
 keybind = super+shift+d=text:\x02X
 # rename window
