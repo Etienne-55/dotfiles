@@ -24,7 +24,7 @@ macos-titlebar-style = hidden
 maximize = true
 # 90% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
 background-opacity = 0.9
-background-blur = 20
+background-blur = 40
 # animated starfield + aurora over the dark cells (paths relative to this file);
 # shaders run in order, each one drawing over the previous one's output
 custom-shader = shaders/starfield.glsl

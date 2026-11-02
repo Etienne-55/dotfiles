@@ -1,20 +1,37 @@
-// aurora: northern-lights curtains drifting across the top of the screen, drawn only on dark cells
+// aurora: northern-lights curtains snaking across the whole sky, drawn only on dark cells
 // loaded by custom-shader in ../config
+//
+// what makes it look natural:
+//   - each band is a ribbon whose lower edge meanders in big S-folds that slowly change shape
+//   - rays are vertical streaks that flicker in place (not slide), each with its own length
+//   - where a fold turns, you see the curtain edge-on, so it glows brighter
+//   - farther bands sit higher, are thinner, dimmer and fold less (perspective)
+//   - green at the lower edge, fading to violet higher up, with a faint haze around it
 
-#define LAYERS        3
-#define BRIGHTNESS    0.35
-#define SPEED         0.01   // how fast the curtains drift sideways
-#define PULSE_SPEED   0.08   // how fast the brightness wave travels along them
-#define HEIGHT        0.85   // edge height at mid-screen; with CLIMB it sets where the band enters
-                             // (it meets the right side at HEIGHT + CLIMB / 2 = 0.3)
-#define WAVE          0.25   // how much the lower edge folds up and down
-#define FADE_UP       5.0    // higher = shorter curtains
-#define CLIMB         -1.1  // band climbs from the screen edge to the top right (0 = flat, flip sign to mirror)
-#define LEFT_FADE     vec2(0.4, 0.5)   // safety cutoff on the code side, in screen widths
-#define SLANT         -0.5   // rays lean left as they go up, like \  (0 = vertical)
-#define RISE_SPEED    0.15   // how fast light climbs up the rays (0 = still)
-#define EDGE_COLOR    vec3(0.15, 1.0, 0.55)  // bright green lower edge
-#define TOP_COLOR     vec3(0.55, 0.25, 1.0)  // violet upper fringe
+#define BANDS         2
+#define BRIGHTNESS    0.3
+#define HEIGHT        0.64   // lower edge of the nearest band (0 = bottom, 1 = top)
+#define SPREAD        0.1    // each farther band sits this much higher
+#define FOLD_AMP      0.13   // how far the S-folds swing up and down
+#define FOLD_FREQ     1.5    // how many big folds fit across the screen
+#define TILT          -0.3   // band descends toward the right (flip sign to descend left, 0 = flat)
+#define DRIFT         0.003  // how fast the folds slide sideways
+#define MORPH         0.004  // how fast the folds change shape
+#define FADE_UP       2.5    // higher = shorter curtains
+#define RAY_DENSITY   14.0   // rays per screen height
+#define RAY_CONTRAST  0.35   // how much rays stand out from the curtain (0 = smooth glow)
+#define SHIMMER       0.03   // how fast rays brighten and fade (keep low: motion pulls the eye)
+#define PULSE         0.005  // how fast bright patches travel along the bands
+#define FOLD_GLOW     0.5    // extra brightness where a fold turns edge-on
+#define SOFTEN        1.5    // tames the brightest parts only; dim glow stays as is (0 = off)
+#define HAZE          0.06   // soft diffuse glow around each band
+#define LEFT_STRENGTH 0.25   // aurora strength on the left (code) side; 1 = even everywhere
+#define TOP_ONLY      vec2(0.42, 0.6)  // aurora fades in between these heights (0 = bottom)
+#define EDGE_COLOR    vec3(0.15, 1.0, 0.55)  // green lower edge
+#define TOP_COLOR     vec3(0.4, 0.18, 0.75)  // faint violet fringe on top of each curtain
+#define GREEN_DEPTH   0.2    // how tall the green part is before it turns violet
+#define SKY_VIOLET    0.25   // upper part of the screen leans violet (0 = off)
+#define BREATHE_SPEED 0.01   // how fast the whole display brightens and dims
 #define BLEND_THRESH  0.5
 #define PANEL_GLOW    0.3    // aurora strength behind nvim panels (blurred: no rays)
 #define PANEL_DEBUG   0      // 1 = tint detected panels red, to check the detection
@@ -36,70 +53,90 @@ float panelMask(vec2 fragCoord) {
     return (lr || ud) ? 1.0 : 0.0;
 }
 
-float hash(float n) {
-    return fract(sin(n * 127.1) * 43758.5453);
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
 
-// smooth 1D value noise
-float noise(float x) {
-    float i = floor(x);
-    float f = fract(x);
+// smooth 2D value noise; one axis is usually time, so things morph instead of sliding
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
-    return mix(hash(i), hash(i + 1.0), f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 
-float fbm(float x) {
+float fbm(vec2 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 4; i++) {
-        v += a * noise(x);
-        x *= 2.03;
+    for (int i = 0; i < 3; i++) {
+        v += a * noise(p);
+        p = p * 2.03 + vec2(1.7, 9.2);
         a *= 0.5;
     }
     return v;
+}
+
+// big S-folds of a band's lower edge, 0..1
+float fold(float x, float fi) {
+    return fbm(vec2(x * FOLD_FREQ + iTime * DRIFT + fi * 13.0, iTime * MORPH + fi * 7.0));
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord / iResolution.xy;
     float aspect = iResolution.x / iResolution.y;
     float x = uv.x * aspect;
+    float y = 1.0 - uv.y;   // ghostty puts fragCoord y = 0 at the top; flip so 0 = bottom
 
     float panel = panelMask(fragCoord);
     vec3 aurora = vec3(0.0);
 
-    for (int i = 0; i < LAYERS; i++) {
+    for (int i = 0; i < BANDS; i++) {
         float fi = float(i);
-        float t = iTime * SPEED * (1.0 + fi * 0.3);
+        float near = 1.0 - fi * 0.3;   // farther bands: smaller folds, thinner, dimmer
 
-        // the lower edge folds like a hanging curtain; each layer sits a bit higher
-        float fold = fbm(x * 1.5 + t + fi * 10.0);
-        float base = HEIGHT + fi * 0.07 + (fold - 0.5) * WAVE + (uv.x - 0.5) * CLIMB;
-        float d = uv.y - base;
+        // lower edge and its slope (finite difference) to find where folds turn edge-on
+        float e = 0.02;
+        float f = fold(x, fi);
+        float slope = (fold(x + e, fi) - fold(x - e, fi)) / (2.0 * e);
+        float amp = 2.0 * FOLD_AMP * near;
+        float base = HEIGHT + fi * SPREAD + (f - 0.5) * amp + (uv.x - 0.5) * TILT;
+        float d = y - base;
+
+        // rays: vertical streaks that flicker in place; they bunch up where the fold moves
+        float rx = x + f * 2.0;
+        float r1 = noise(vec2(rx * RAY_DENSITY + fi * 31.0, iTime * SHIMMER + fi * 3.0));
+        float r2 = noise(vec2(rx * RAY_DENSITY * 2.7 + fi * 17.0, iTime * SHIMMER * 1.7));
+        float rays = mix(1.0 + RAY_CONTRAST * (2.0 * r1 * r2 - 0.5), 1.0, panel);   // behind panels: even glow
+
+        // each ray reaches its own height
+        float len = mix(1.0 + RAY_CONTRAST * (r1 - 0.5), 1.0, panel);
+        float fadeUp = FADE_UP * (1.0 + fi * 0.5) / len;
 
         // sharp lower edge, long exponential fade upward
-        float curtain = smoothstep(-0.015, 0.01, d) * exp(-max(d, 0.0) * FADE_UP);
+        float curtain = smoothstep(-0.012, 0.004, d) * exp(-max(d, 0.0) * fadeUp);
 
-        // rays: fine noise along x, offset by the fold so the rays bend with it;
-        // shifting x by the height tilts them into a backslash shape
-        float rx = x - d * SLANT;
-        float rays = fbm(rx * 14.0 + fold * 4.0 + t * 3.0 + fi * 5.0);
-        rays = 0.3 + 1.4 * rays * rays;
+        // bright patches drifting along the band, and extra glow where a fold turns
+        float glowPatch = 0.4 + 0.9 * noise(vec2(x * 2.5 - iTime * PULSE, fi * 5.0 + iTime * MORPH * 2.0));
+        float edgeOn = 1.0 + FOLD_GLOW * smoothstep(0.15, 0.6, abs(slope * amp));
 
-        // bright knots that climb up each ray: noise along the height, scrolling upward
-        float rise = noise(d * 18.0 - iTime * RISE_SPEED + rx * 6.0 + fi * 3.0);
-        rays *= 0.5 + rise;
-        // behind a panel the rays and knots blur away into an even glow
-        rays = mix(rays, 1.0, panel);
-
-        // slow brightness wave travelling along the curtain
-        float pulse = 0.55 + 0.45 * sin(x * 2.0 - iTime * PULSE_SPEED + fi * 2.1);
-
-        vec3 col = mix(EDGE_COLOR, TOP_COLOR, smoothstep(0.0, 0.3, d));
-        aurora += col * curtain * rays * pulse * (1.0 - fi * 0.25);
+        // green low on the curtain, violet above it; the top of the screen leans violet too,
+        // so a farther band's green edge never sits above a nearer band's violet
+        float violet = max(smoothstep(0.02, GREEN_DEPTH, d),
+                           SKY_VIOLET * smoothstep(0.6, 1.0, y));
+        vec3 col = mix(EDGE_COLOR, TOP_COLOR, violet);
+        float haze = HAZE * exp(-abs(d) * 8.0);
+        aurora += (col * curtain * rays * glowPatch * edgeOn + EDGE_COLOR * haze) * near;
     }
 
-    aurora *= BRIGHTNESS * mix(1.0, PANEL_GLOW, panel);
-    aurora *= smoothstep(LEFT_FADE.x, LEFT_FADE.y, uv.x);
+    // the whole display slowly breathes brighter and dimmer
+    float breathe = 0.8 + 0.2 * noise(vec2(iTime * BREATHE_SPEED, 0.0));
+    aurora *= BRIGHTNESS * breathe * mix(1.0, PANEL_GLOW, panel);
+    // soft knee: bright spots lose ~40%, faint glow barely changes; scaled by the brightest
+    // channel so the color doesn't shift
+    aurora /= 1.0 + SOFTEN * max(aurora.r, max(aurora.g, aurora.b));
+    aurora *= mix(LEFT_STRENGTH, 1.0, smoothstep(0.15, 0.75, uv.x));
+    aurora *= smoothstep(TOP_ONLY.x, TOP_ONLY.y, y - (uv.x - 0.5) * TILT);   // cutoff follows the tilt
 
     vec4 term = texture(iChannel0, uv);
     float luma = dot(term.rgb, vec3(0.299, 0.587, 0.114));
