@@ -10,6 +10,23 @@
 
 #define FLY_SPEED     0.01  // how fast you're moving forward
 
+// nvim floats and sidebars paint this exact bg (bg_panel in nvim/lua/eti/core/palette.lua)
+#define PANEL_BG      (vec3(14.0, 7.0, 25.0) / 255.0)
+
+bool isPanelBg(vec2 fragCoord) {
+    vec3 c = texture(iChannel0, fragCoord / iResolution.xy).rgb;
+    return all(lessThan(abs(c - PANEL_BG), vec3(2.5 / 255.0)));
+}
+
+// 1.0 inside a panel; text and selected rows don't have the panel bg, so a pixel also
+// counts when the bg shows on both sides of it (left+right a glyph apart, up+down a row apart)
+float panelMask(vec2 fragCoord) {
+    if (isPanelBg(fragCoord)) return 1.0;
+    bool lr = isPanelBg(fragCoord + vec2(12.0, 0.0)) && isPanelBg(fragCoord - vec2(12.0, 0.0));
+    bool ud = isPanelBg(fragCoord + vec2(0.0, 40.0)) && isPanelBg(fragCoord - vec2(0.0, 40.0));
+    return (lr || ud) ? 1.0 : 0.0;
+}
+
 float hash(vec2 p) {
     p = fract(p * vec2(127.1, 311.7));
     p += dot(p, p + 19.19);
@@ -77,7 +94,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec4 term = texture(iChannel0, uv);
     float luma = dot(term.rgb, vec3(0.299, 0.587, 0.114));
     float blend = smoothstep(BLEND_THRESH * 0.4, BLEND_THRESH, 1.0 - luma);
-    float star = brightness * blend;
+    // no stars behind nvim panels: frosted glass hides pinpoints (and keeps the panel bg
+    // exact, so aurora.glsl, which runs next, still finds the panel)
+    float star = brightness * blend * (1.0 - panelMask(fragCoord));
     vec3 col = term.rgb + STAR_COLOR * star;
 
     // background-opacity makes the empty background see-through (low term.a);

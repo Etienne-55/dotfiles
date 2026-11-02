@@ -25,8 +25,10 @@ maximize = true
 # 90% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
 background-opacity = 0.9
 background-blur = 20
-# animated starfield over the dark cells (shaders/starfield.glsl, path relative to this file)
+# animated starfield + aurora over the dark cells (paths relative to this file);
+# shaders run in order, each one drawing over the previous one's output
 custom-shader = shaders/starfield.glsl
+custom-shader = shaders/aurora.glsl
 custom-shader-animation = true
 # fullscreen stays on the current desktop, so the wallpaper still shows through;
 # native macOS fullscreen moves to its own space with black behind the window
@@ -73,6 +75,9 @@ keybind = super+d=text:\x02x
 keybind = super+z=text:\x02v
 # zoom pane (toggle)
 keybind = super+backspace=text:\x02z
+# break the pane out into its own window / glue a window back in as a split
+keybind = super+b=text:\x02b
+keybind = super+g=text:\x02g
 # copy mode (scroll / search)
 keybind = super+bracket_left=text:\x02[
 
@@ -86,14 +91,16 @@ keybind = super+shift+a=text:\x02N
 keybind = super+q=text:\x02N
 # delete window, no confirm
 keybind = super+shift+d=text:\x02X
+# Cmd+< / Cmd+> (Cmd+Shift+comma / period on US): move the current window one place left / right
+# in the bar; replaces ghostty's default Cmd+Shift+comma reload (Cmd+r reloads)
+keybind = super+shift+comma=text:\x02<
+keybind = super+shift+period=text:\x02>
 # rename window
 keybind = super+comma=text:\x02,
 
 # popups / tools
 # claude chat
 keybind = super+p=text:\x02p
-# cht.sh
-keybind = super+i=text:\x02i
 # hex cheat sheet (Cmd+Space is Spotlight)
 keybind = super+slash=text:\x02\x20
 # tuicr review of uncommitted changes
@@ -118,3 +125,5 @@ keybind = super+digit_9=text:\x029
 
 # Hide the mouse pointer as soon as you type; it comes back when you move the mouse
 mouse-hide-while-typing = true
+
+macos-icon = retro

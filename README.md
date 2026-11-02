@@ -43,7 +43,6 @@ ones, and `git config --global` writes there, never into this repo.
 | `zsh/zshrc` | `~/.zshrc` |
 | `zsh/p10k.zsh` | `~/.p10k.zsh` (powerlevel10k prompt) |
 | `tmux/tmux.conf` | `~/.tmux.conf` |
-| `tmux/tmux-cht.sh` (+ `-languages`, `-command`) | `~/.tmux-cht.sh` (prefix + i cheat sheet) |
 | `ghostty/` | `~/.config/ghostty/` (terminal config + the Neon theme) |
 | `tuicr/` | `~/.config/tuicr/` (code review TUI config + the Neon theme) |
 | `git/gitconfig` | included from `~/.gitconfig` |
