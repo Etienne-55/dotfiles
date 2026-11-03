@@ -25,10 +25,8 @@ maximize = true
 # 90% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
 background-opacity = 0.9
 background-blur = 40
-# animated starfield + aurora over the dark cells (paths relative to this file);
-# shaders run in order, each one drawing over the previous one's output
-custom-shader = shaders/starfield.glsl
-custom-shader = shaders/aurora.glsl
+# animated starfield + aurora over the dark cells, in one pass (path relative to this file)
+custom-shader = shaders/sky.glsl
 custom-shader-animation = true
 # fullscreen stays on the current desktop, so the wallpaper still shows through;
 # native macOS fullscreen moves to its own space with black behind the window
@@ -109,9 +107,9 @@ keybind = super+slash=text:\x02\x20
 # lazygit
 keybind = super+e=text:\x02e
 # nvim diffview of uncommitted changes
-keybind = super+i=text:\x02i
+keybind = super+w=text:\x02i
 # binary clock (peaclock)
-keybind = super+w=text:\x02C
+keybind = super+i=text:\x02C
 
 # Cmd+r reloads both the ghostty and tmux configs
 keybind = super+r=reload_config

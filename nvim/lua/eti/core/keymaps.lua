@@ -48,9 +48,13 @@ local function jump_diagnostic_line(dir)
   if #diags == 0 then
     return
   end
+  -- diagnostics aren't clamped: after deleting lines, a stale one (before the LSP
+  -- republishes) can sit past the end; set_cursor would error on it
+  local last = vim.api.nvim_buf_line_count(0) - 1
   local lines = {} -- line -> first column with a diagnostic on it
   for _, d in ipairs(diags) do
-    lines[d.lnum] = math.min(lines[d.lnum] or math.huge, d.col)
+    local lnum = math.min(d.lnum, last)
+    lines[lnum] = math.min(lines[lnum] or math.huge, d.col)
   end
   local sorted = vim.tbl_keys(lines)
   table.sort(sorted)

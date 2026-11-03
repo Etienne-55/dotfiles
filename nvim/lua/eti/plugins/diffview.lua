@@ -1,4 +1,4 @@
--- Side-by-side git diffs with a file list: <leader>gv (or Cmd+i in tmux, a popup) for uncommitted changes, and
+-- Side-by-side git diffs with a file list: <leader>gv (or Cmd+w in tmux, a popup) for uncommitted changes, and
 -- `git diff dev` / `git diff master` in the shell for the whole branch (zsh/zshrc).
 -- In it: <Tab>/<S-Tab> next/prev file, ]c/[c next/prev change, q closes.
 return {
@@ -12,7 +12,7 @@ return {
     -- slashes instead of dashes on the side where lines don't exist
     vim.opt.fillchars:append({ diff = "╱" })
 
-    -- in the tmux Cmd+i popup (g:diff_popup), q saves edits and quits nvim so the popup closes too
+    -- in the tmux Cmd+w popup (g:diff_popup), q saves edits and quits nvim so the popup closes too
     local function quit()
       if vim.g.diff_popup then
         vim.cmd("silent! wall | qa!")
