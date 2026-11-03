@@ -34,6 +34,10 @@
 #define BREATHE_SPEED 0.01   // how fast the whole display brightens and dims
 #define BLEND_THRESH  0.5
 #define PANEL_GLOW    0.3    // aurora strength behind nvim panels (blurred: no rays)
+// frost: the whole aurora seen through frosted glass (FROST_BLUR 0, FROST_EDGE 0, FROST_GLOW 1 = off)
+#define FROST_BLUR    0.7    // how much the rays smooth into an even glow (1 = like nvim panels)
+#define FROST_EDGE    0.05   // how soft the curtains' sharp lower edge gets
+#define FROST_GLOW    0.85   // aurora strength through the glass (it takes a little light)
 #define PANEL_DEBUG   0      // 1 = tint detected panels red, to check the detection
 
 // nvim floats and sidebars paint this exact bg (bg_panel in nvim/lua/eti/core/palette.lua)
@@ -107,14 +111,15 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float rx = x + f * 2.0;
         float r1 = noise(vec2(rx * RAY_DENSITY + fi * 31.0, iTime * SHIMMER + fi * 3.0));
         float r2 = noise(vec2(rx * RAY_DENSITY * 2.7 + fi * 17.0, iTime * SHIMMER * 1.7));
-        float rays = mix(1.0 + RAY_CONTRAST * (2.0 * r1 * r2 - 0.5), 1.0, panel);   // behind panels: even glow
+        float soft = max(panel, FROST_BLUR);   // frosted everywhere, fully even behind panels
+        float rays = mix(1.0 + RAY_CONTRAST * (2.0 * r1 * r2 - 0.5), 1.0, soft);
 
         // each ray reaches its own height
-        float len = mix(1.0 + RAY_CONTRAST * (r1 - 0.5), 1.0, panel);
+        float len = mix(1.0 + RAY_CONTRAST * (r1 - 0.5), 1.0, soft);
         float fadeUp = FADE_UP * (1.0 + fi * 0.5) / len;
 
-        // sharp lower edge, long exponential fade upward
-        float curtain = smoothstep(-0.012, 0.004, d) * exp(-max(d, 0.0) * fadeUp);
+        // lower edge (softened by FROST_EDGE), long exponential fade upward
+        float curtain = smoothstep(-0.012 - FROST_EDGE, 0.004 + FROST_EDGE, d) * exp(-max(d, 0.0) * fadeUp);
 
         // bright patches drifting along the band, and extra glow where a fold turns
         float glowPatch = 0.4 + 0.9 * noise(vec2(x * 2.5 - iTime * PULSE, fi * 5.0 + iTime * MORPH * 2.0));
@@ -131,7 +136,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // the whole display slowly breathes brighter and dimmer
     float breathe = 0.8 + 0.2 * noise(vec2(iTime * BREATHE_SPEED, 0.0));
-    aurora *= BRIGHTNESS * breathe * mix(1.0, PANEL_GLOW, panel);
+    aurora *= BRIGHTNESS * breathe * mix(1.0, PANEL_GLOW, panel) * FROST_GLOW;
     // soft knee: bright spots lose ~40%, faint glow barely changes; scaled by the brightest
     // channel so the color doesn't shift
     aurora /= 1.0 + SOFTEN * max(aurora.r, max(aurora.g, aurora.b));

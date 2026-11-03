@@ -7,6 +7,7 @@
 #define BRIGHTNESS    0.6
 #define STAR_COLOR    vec3(0.9, 0.93, 1.0)
 #define BLEND_THRESH  0.5
+#define FROST_STARS   0.4   // stars dimmed by the frosted glass (1 = off, 0 = hidden)
 
 #define FLY_SPEED     0.01  // how fast you're moving forward
 
@@ -96,7 +97,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     float blend = smoothstep(BLEND_THRESH * 0.4, BLEND_THRESH, 1.0 - luma);
     // no stars behind nvim panels: frosted glass hides pinpoints (and keeps the panel bg
     // exact, so aurora.glsl, which runs next, still finds the panel)
-    float star = brightness * blend * (1.0 - panelMask(fragCoord));
+    float star = brightness * blend * (1.0 - panelMask(fragCoord)) * FROST_STARS;
     vec3 col = term.rgb + STAR_COLOR * star;
 
     // background-opacity makes the empty background see-through (low term.a);

@@ -33,8 +33,11 @@ custom-shader-animation = true
 # fullscreen stays on the current desktop, so the wallpaper still shows through;
 # native macOS fullscreen moves to its own space with black behind the window
 macos-non-native-fullscreen = true
-window-padding-x = 16
+# left, right: no right padding so the text reaches the right edge of the screen
+window-padding-x = 16,0
 window-padding-y = 12,8
+# false: keep the left,right values as set (true would re-center and bring the right gap back);
+# the leftover space (under one column) still goes to the right
 window-padding-balance = false
 cursor-style = block
 cursor-style-blink = true
