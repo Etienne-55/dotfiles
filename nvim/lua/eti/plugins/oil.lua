@@ -38,10 +38,13 @@ return {
           return name == ".DS_Store" or name == ".."
         end,
       },
+      -- 95% of the editor, centred; padding 0 so the percentage is what sizes it
       float = {
-        padding = 4,
-        max_width = 100,
-        max_height = 30,
+        padding = 0,
+        max_width = 0.95,
+        max_height = 0.95,
+        border = "rounded",
+        get_win_title = function() return "" end, -- no path in the border
       },
     })
 
@@ -54,7 +57,7 @@ return {
       end,
     })
 
-    vim.keymap.set("n", "-", "<cmd>Oil<CR>", { desc = "Open parent directory (oil)" })
+    vim.keymap.set("n", "-", function() require("oil").open_float() end, { desc = "Open parent directory (oil, 95% float)" })
     vim.keymap.set("n", "<leader>-", function() require("oil").toggle_float() end, { desc = "Toggle oil in float" })
   end,
 }

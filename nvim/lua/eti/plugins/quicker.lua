@@ -26,6 +26,64 @@ local function word_to_list()
   require("quicker").open(half())
 end
 
+-- moving through the list shows each result in the file window, focus stays in
+-- the list (like <CR> without leaving). Context lines from > preview too.
+local function preview_under_cursor(qfwin)
+  local item = vim.fn.getqflist()[vim.api.nvim_win_get_cursor(qfwin)[1]]
+  if not item or item.bufnr == 0 then
+    return
+  end
+  -- the window <CR> would use: the previous one, else the first normal window
+  local target = vim.fn.win_getid(vim.fn.winnr("#"))
+  local function usable(win)
+    if win == 0 or win == qfwin or vim.api.nvim_win_get_config(win).relative ~= "" then
+      return false
+    end
+    local bt = vim.bo[vim.api.nvim_win_get_buf(win)].buftype
+    return bt == "" or bt == "acwrite"
+  end
+  if not usable(target) then
+    target = vim.iter(vim.api.nvim_tabpage_list_wins(0)):find(usable)
+    if not target then
+      return
+    end
+  end
+  -- :buffer, not nvim_win_set_buf: a first load needs the full autocmds
+  -- (filetype, treesitter, LSP attach), same as opening it from the list.
+  -- quicker may have loaded it already (for highlights) with no filetype set.
+  vim.api.nvim_win_call(target, function()
+    vim.cmd.buffer(item.bufnr)
+    if vim.bo.filetype == "" then
+      vim.cmd("filetype detect")
+    end
+  end)
+  local lnum = math.min(math.max(item.lnum, 1), vim.api.nvim_buf_line_count(item.bufnr))
+  vim.api.nvim_win_set_cursor(target, { lnum, math.max(item.col - 1, 0) })
+  vim.api.nvim_win_call(target, function() vim.cmd("normal! zz") end)
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "qf",
+  callback = function(ev)
+    local last
+    vim.api.nvim_create_autocmd("CursorMoved", {
+      group = vim.api.nvim_create_augroup("qf_follow_" .. ev.buf, { clear = true }),
+      buffer = ev.buf,
+      callback = function()
+        local win = vim.api.nvim_get_current_win()
+        if vim.fn.win_gettype(win) ~= "quickfix" then
+          return -- location lists keep the default behaviour
+        end
+        local line = vim.api.nvim_win_get_cursor(win)[1]
+        if line ~= last then
+          last = line
+          preview_under_cursor(win)
+        end
+      end,
+    })
+  end,
+})
+
 return {
   "stevearc/quicker.nvim",
   ft = "qf",
