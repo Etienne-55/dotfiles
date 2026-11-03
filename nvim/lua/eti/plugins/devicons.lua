@@ -1,4 +1,4 @@
--- File icons (lualine, the recent files, nvim-tree, telescope, oil); only overrides here
+-- File icons (lualine, nvim-tree, telescope, oil); only overrides here
 return {
   "nvim-tree/nvim-web-devicons",
   opts = {

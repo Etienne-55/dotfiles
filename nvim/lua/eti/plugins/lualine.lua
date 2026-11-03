@@ -77,9 +77,8 @@ return {
         component_separators = "",
       },
       sections = {
-        -- the current file (parent dir + name only, so diagnostics fit), then the last 3 other
-        -- files, <leader>1-3 to open (extras/recent.lua). No branch: the tmux bar shows it.
-        lualine_b = { filename, save_state, infos, warnings, errors, { require("eti.extras.recent").component } },
+        -- the current file (parent dir + name only, so diagnostics fit). No branch: the tmux bar shows it.
+        lualine_b = { filename, save_state, infos, warnings, errors },
         lualine_c = {
           "diff",
         },
@@ -113,8 +112,16 @@ return {
     opts.extensions = {
       { filetypes = { "snacks_terminal" }, sections = claude_bar, inactive_sections = claude_bar },
     }
+    -- a file window keeps its full bar (save state, diagnostics, mode) while the cursor is in
+    -- another split like Claude's, dimmed by the inactive theme. The mode is fixed to NORMAL there:
+    -- the live mode would be the focused window's (TERMINAL while typing in Claude).
+    opts.sections.lualine_a = { "mode" }
+    opts.sections.lualine_y = { "progress" }
+    opts.sections.lualine_z = { "location" }
+    opts.inactive_sections = vim.tbl_extend("force", opts.sections, {
+      lualine_a = { function() return "NORMAL" end },
+    })
     lualine.setup(opts)
-    require("eti.extras.recent").setup()
 
     -- lualine doesn't refresh on these by itself; LSP diagnostics arrive after the buffer opens,
     -- so without DiagnosticChanged the counts only showed up once the cursor moved

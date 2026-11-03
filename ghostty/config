@@ -103,8 +103,10 @@ keybind = super+comma=text:\x02,
 keybind = super+p=text:\x02p
 # hex cheat sheet (Cmd+Space is Spotlight)
 keybind = super+slash=text:\x02\x20
-# tuicr review of uncommitted changes
+# lazygit
 keybind = super+e=text:\x02e
+# nvim diffview of uncommitted changes
+keybind = super+i=text:\x02i
 # binary clock (peaclock)
 keybind = super+w=text:\x02C
 
