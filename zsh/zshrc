@@ -113,8 +113,6 @@ tmux() {
 
 alias c='clear'
 
-alias gg='lazygit'
-
 alias ld='lazydocker'
 
 alias dbui='vim +DBUI'

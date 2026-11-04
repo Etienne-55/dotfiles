@@ -16,8 +16,10 @@ local function set(win, on)
   require("neominimap.api").win.refresh(win) -- re-runs win_filter: opens or closes it
 end
 
+-- never in diff windows (diffview, :diffthis): the two sides already line up and the
+-- minimap pushed the right one narrower than the left
 function M.visible(win)
-  return vim.w[win].minimap_peek == true
+  return vim.w[win].minimap_peek == true and not vim.wo[win].diff
 end
 
 -- safe from expr mappings: refresh is scheduled by neominimap

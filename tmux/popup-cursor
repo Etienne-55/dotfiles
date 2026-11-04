@@ -1,0 +1,7 @@
+#!/bin/sh
+# runs a tmux popup's command with the cursor color nudged one step off the
+# theme's (#E07AC8 -> #E07AC9, looks the same). ghostty/shaders/cursor_trail.glsl
+# skips the trail when the cursor color changes, so opening/closing a popup
+# (tmux restores the pane's color on close) doesn't smear across the screen.
+printf '\033]12;#E07AC9\007'
+exec "$@"

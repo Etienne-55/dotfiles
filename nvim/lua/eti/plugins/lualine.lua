@@ -31,14 +31,28 @@ return {
     -- save state after the file name (instead of lualine's [+]): an orange disk while there are
     -- unsaved changes (the plain disk: the alert one is drawn smaller), a green save-check disk
     -- once the file is saved
-    local filename = {
-      "filename",
-      path = 4,
-      symbols = { modified = "" },
-      -- lualine still adds the space before the (now empty) modified marker, which pushed the
-      -- disk one cell right while the file was unsaved
-      fmt = function(name) return (name:gsub("%s+$", "")) end,
-    }
+    -- the file name stands out: parent dir dimmed ("plugins/"), the name itself bold and bright.
+    -- Inactive windows get plain versions so the theme dims them like the rest of the bar.
+    local function parent_dir(active)
+      return {
+        function() return vim.fn.expand("%:h:t") .. "/" end,
+        cond = function() return vim.bo.buftype == "" and vim.fn.expand("%:t") ~= "" end,
+        color = active and { fg = p.dark5 } or nil,
+        padding = { left = 1, right = 0 },
+      }
+    end
+    local function filename(active)
+      return {
+        "filename",
+        path = 0,
+        symbols = { modified = "" },
+        -- lualine still adds the space before the (now empty) modified marker, which pushed the
+        -- disk one cell right while the file was unsaved
+        fmt = function(name) return (name:gsub("%s+$", "")) end,
+        color = active and { fg = p.blue6, gui = "bold" } or nil,
+        padding = { left = 0, right = 1 },
+      }
+    end
     local save_state = {
       function()
         return vim.bo.modified and "󰆓" or "󱣪"
@@ -78,7 +92,7 @@ return {
       },
       sections = {
         -- the current file (parent dir + name only, so diagnostics fit). No branch: the tmux bar shows it.
-        lualine_b = { filename, save_state, infos, warnings, errors },
+        lualine_b = { parent_dir(true), filename(true), save_state, infos, warnings, errors },
         lualine_c = {
           "diff",
         },
@@ -120,6 +134,7 @@ return {
     opts.sections.lualine_z = { "location" }
     opts.inactive_sections = vim.tbl_extend("force", opts.sections, {
       lualine_a = { function() return "NORMAL" end },
+      lualine_b = { parent_dir(false), filename(false), save_state, infos, warnings, errors },
     })
     lualine.setup(opts)
 
