@@ -137,6 +137,7 @@ float stars(vec2 uv, float aspect) {
 }
 
 // ---------------------------------------------------------------- aurora
+/* aurora disabled
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -221,6 +222,7 @@ vec3 aurora(vec2 uv, float aspect, float panel) {
     col /= 1.0 + SOFTEN * max(col.r, max(col.g, col.b));
     return col;
 }
+*/
 
 // ---------------------------------------------------------------- main
 
@@ -241,8 +243,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // where the aurora can show: stronger on the right, only in the upper part
     // (the cutoff follows the tilt); exactly 0 on the bottom ~40% of the screen
-    float sky = mix(LEFT_STRENGTH, 1.0, smoothstep(0.15, 0.75, uv.x))
-              * smoothstep(TOP_ONLY.x, TOP_ONLY.y, y - (uv.x - 0.5) * TILT);
+    // aurora disabled
+    // float sky = mix(LEFT_STRENGTH, 1.0, smoothstep(0.15, 0.75, uv.x))
+    //           * smoothstep(TOP_ONLY.x, TOP_ONLY.y, y - (uv.x - 0.5) * TILT);
+    float sky = 0.0;
 
     float star = stars(uv, aspect);
 
@@ -252,7 +256,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // no stars behind nvim panels: frosted glass hides pinpoints
     star *= blend * (1.0 - panel) * FROST_STARS;
 
-    vec3 glow = sky > 0.0 ? aurora(uv, aspect, panel) * sky * blend : vec3(0.0);
+    // vec3 glow = sky > 0.0 ? aurora(uv, aspect, panel) * sky * blend : vec3(0.0);
+    vec3 glow = vec3(0.0);
 
     vec3 col = term.rgb + STAR_COLOR * star + glow;
     if (PANEL_DEBUG == 1) col = mix(col, vec3(1.0, 0.0, 0.0), panel * 0.5);

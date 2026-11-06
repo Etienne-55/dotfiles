@@ -17,26 +17,35 @@ move_lines("<M-Down>", ":m '>+1<CR>gv=gv") -- same, with alt+arrows (plain arrow
 move_lines("<M-Up>", ":m '<-2<CR>gv=gv")
 
 
--- half-page scroll keeps the cursor centered on screen
-keymap.set({ "n", "x" }, "<C-d>", "<C-d>zz")
+-- half-page scroll keeps the cursor centered on screen.
+-- Down from above the middle of the first screen: <C-d> scrolls half a page, then zz
+-- scrolls back (one line short with an even window height), so the screen flinched.
+-- There just move the cursor to the middle row (M is the row zz centers on).
+local function half_page_down()
+  if vim.fn.line("w0") == 1 and vim.fn.winline() < math.floor((vim.api.nvim_win_get_height(0) + 1) / 2) then
+    return "M"
+  end
+  return "<C-d>zz"
+end
+keymap.set({ "n", "x" }, "<C-d>", half_page_down, { expr = true })
 keymap.set({ "n", "x" }, "<C-u>", "<C-u>zz")
-keymap.set({ "n", "x" }, "<C-Down>", "<C-d>zz") -- same, with ctrl+arrows
+keymap.set({ "n", "x" }, "<C-Down>", half_page_down, { expr = true }) -- same, with ctrl+arrows
 keymap.set({ "n", "x" }, "<C-Up>", "<C-u>zz")
 -- alt+arrows too, but only in normal mode: in visual mode they move the selected lines (above)
-keymap.set("n", "<M-Down>", "<C-d>zz")
+keymap.set("n", "<M-Down>", half_page_down, { expr = true })
 keymap.set("n", "<M-Up>", "<C-u>zz")
 -- page keys (fn+arrows on a mac, shift+arrows) would leave the cursor on the
 -- top/bottom line; make them the same centered half-page scroll.
 -- shift+arrows also flash the minimap (extras/minimap.lua)
-keymap.set({ "n", "x" }, "<PageDown>", "<C-d>zz")
+keymap.set({ "n", "x" }, "<PageDown>", half_page_down, { expr = true })
 keymap.set({ "n", "x" }, "<PageUp>", "<C-u>zz")
 local function scroll_with_minimap(key, scroll)
   keymap.set({ "n", "x" }, key, function()
     require("eti.extras.minimap").peek()
-    return scroll
+    return type(scroll) == "function" and scroll() or scroll
   end, { expr = true })
 end
-scroll_with_minimap("<S-Down>", "<C-d>zz")
+scroll_with_minimap("<S-Down>", half_page_down)
 scroll_with_minimap("<S-Up>", "<C-u>zz")
 
 -- shift+9 / shift+0: previous/next line with a diagnostic (several on one line

@@ -27,6 +27,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // color changed with the jump: a tmux popup opened or closed (tmux/popup-cursor
     // tags the color inside popups), so the jump is across layers, not a real move
     if (any(greaterThan(abs(iCurrentCursorColor.rgb - iPreviousCursorColor.rgb), vec3(0.001)))) return;
+    // inside a popup (cursor tagged #E07AC9): no trail at all. tmux repaints the whole
+    // popup on every update, ignoring the app's synchronized output, so ghostty sees the
+    // cursor mid-redraw and the trail ping-pongs (nvim diffview on Cmd+w). Normal panes are fine
+    if (all(lessThan(abs(iCurrentCursorColor.rgb - vec3(224.0, 122.0, 201.0) / 255.0), vec3(0.5 / 255.0)))) return;
 
     vec2 size = iCurrentCursor.zw;
     vec2 head = iCurrentCursor.xy + vec2(0.5, -0.5) * size;

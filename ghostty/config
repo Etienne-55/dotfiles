@@ -22,20 +22,26 @@ adjust-cell-height = 10%
 # no title bar, still resizable; tmux windows act as tabs
 macos-titlebar-style = hidden
 maximize = true
-# 90% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
-background-opacity = 0.9
+# 80% opaque + plain blur (macos-glass-regular tinted the window and washed colors out)
+background-opacity = 0.8
 background-blur = 40
 # animated starfield + aurora over the dark cells, in one pass (path relative to this file)
-custom-shader = shaders/sky.glsl
-# cursor trail on jumps; runs after sky.glsl (shaders chain in the order listed)
+# disabled for now; uncomment to bring it back
+# custom-shader = shaders/sky.glsl
+# cursor trail on jumps; runs after sky.glsl when both are on (shaders chain in the order listed)
 custom-shader = shaders/cursor_trail.glsl
 custom-shader-animation = true
 # fullscreen stays on the current desktop, so the wallpaper still shows through;
 # native macOS fullscreen moves to its own space with black behind the window
 macos-non-native-fullscreen = true
+# new windows open in non-native fullscreen (same kind as Cmd+Enter): covers the menu bar
+# and Dock. `true` here would mean native fullscreen (black space), whatever the line above says.
+# Cmd+Enter toggles back to a normal window
+fullscreen = non-native
 # left, right: no right padding so the text reaches the right edge of the screen
 window-padding-x = 16,0
-window-padding-y = 12,8
+# top, bottom: no bottom padding so the tmux status bar sits on the bottom edge of the screen
+window-padding-y = 12,0
 # false: keep the left,right values as set (true would re-center and bring the right gap back);
 # the leftover space (under one column) still goes to the right
 window-padding-balance = false
