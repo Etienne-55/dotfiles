@@ -40,6 +40,9 @@ return {
         hl.TreesitterContextLineNumberBottom = { fg = p.dark5, underline = true, sp = p.dark3 }
         -- minimap cursor: the default CursorLine bg is too dark to spot in the minimap
         hl.NeominimapCursorLine = { bg = p.blue0 }
+        -- minimap cursor sitting on a bug / a changed line (extras/minimap.lua)
+        hl.NeominimapCursorOnBug = { fg = p.red1, bg = p.fg, bold = true }
+        hl.NeominimapCursorOnDiff = { fg = p.blue0, bg = p.cyan, bold = true }
         -- dashboard branch and worktree in neon: hot pink branch, purple folder, cyan icon
         hl.SnacksDashboardFile = { fg = p.magenta, bold = true }
         hl.SnacksDashboardDir = { fg = p.purple }

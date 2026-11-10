@@ -87,6 +87,9 @@ keybind = super+backspace=text:\x02z
 # break the pane out into its own window / glue a window back in as a split
 keybind = super+b=text:\x02b
 keybind = super+g=text:\x02g
+# sessions: pick one to switch to / new session (asks for a name)
+keybind = super+j=text:\x02w
+keybind = super+shift+j=text:\x02S
 # copy mode (scroll / search)
 keybind = super+[=text:\x02[
 

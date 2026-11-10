@@ -1,0 +1,21 @@
+#!/bin/sh
+# Cmd+Shift+j (ghostty) popup: asks a name for a new session in the popup's folder (the pane's), then
+# switches to it. Enter with no name gives the lowest free number (a ghost in the bar); Esc cancels.
+# Also run by tmux/sessions ("+ new session") inside its own popup, with the client as $1 and a prompt
+# that says what it's for as $2: staying in one popup keeps the cursor from jumping back to the pane
+# between two popups, which the ghostty cursor trail would draw.
+# fzf is only the input line here (no list): with no match it prints the query and exits 1, Esc exits 130
+name=$(: | fzf --print-query --no-info --no-separator --layout reverse --pointer '' --prompt "${2:-› }" \
+  --color 'bg:-1,fg:#DCD3F0,query:#DCD3F0,prompt:#A884E8,gutter:-1')
+[ $? -eq 130 ] && exit 0
+
+# the client that opened the popup: passed in by tmux/sessions, else resolved from inside (Cmd+Shift+j's
+# display-popup doesn't expand formats in its command, so it can't pass it)
+client=${1:-$(tmux display -p '#{client_name}')}
+# no name: the lowest free number from 1 (tmux's own counter only grows, giving 4, 7, 9...)
+if [ -z "$name" ]; then
+  name=1
+  while tmux has-session -t "=$name" 2>/dev/null; do name=$((name + 1)); done
+fi
+id=$(tmux new-session -d -P -F '#{session_id}' -c "$PWD" -s "$name") || { tmux display -c "$client" "session \"$name\" exists"; exit 0; }
+tmux switch-client -c "$client" -t "$id"

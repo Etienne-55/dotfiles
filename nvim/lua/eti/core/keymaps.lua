@@ -52,8 +52,11 @@ scroll_with_minimap("<S-Up>", "<C-u>zz")
 -- count once), wrapping around; centered like the {/} hunk jumps, and flashes the
 -- minimap. Set for every buffer so ( / ) never fall back to the sentence motion;
 -- normal mode only, so d) / v) keep it.
+-- only real problems: hints/info (the green unused/"could be" notes) are skipped
+local jump_severity = require("eti.extras.minimap").bug_severity
+
 local function jump_diagnostic_line(dir)
-  local diags = vim.diagnostic.get(0)
+  local diags = vim.diagnostic.get(0, { severity = jump_severity })
   if #diags == 0 then
     return
   end
@@ -82,7 +85,7 @@ local function jump_diagnostic_line(dir)
   vim.cmd("normal! zz")
   -- after zz, so it sits next to the centered line. focus = false: pressed again
   -- before the old popup closes, open_float would move the cursor into it
-  vim.diagnostic.open_float({ focus = false })
+  vim.diagnostic.open_float({ focus = false, severity = jump_severity })
   require("eti.extras.minimap").peek()
 end
 keymap.set("n", "(", function() jump_diagnostic_line(-1) end, { desc = "Previous line with a diagnostic" })

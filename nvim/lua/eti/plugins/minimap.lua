@@ -5,9 +5,9 @@ return {
   init = function()
     vim.g.neominimap = {
       auto_enable = true,
-      -- errors as a mark in the sign column (next to the git marks), not a red
-      -- line background that hides the cursor line
-      diagnostic = { mode = "sign" },
+      -- bugs as red (errors) / yellow (warnings) rows; hints and info are left out.
+      -- the cursor row gets its own color on top (extras/minimap.lua)
+      diagnostic = { mode = "line", severity = { min = vim.diagnostic.severity.WARN } },
       -- hidden except while jumping around (extras/minimap.lua)
       win_filter = function(winid)
         return require("eti.extras.minimap").visible(winid)
