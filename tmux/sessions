@@ -1,33 +1,88 @@
 #!/bin/sh
-# Cmd+j (ghostty) popup: every session by name, most recently used first (● marks yours); "+ new session" is always last and asks the name right here (tmux/new-session).
-# Vim-style, no search line (letters are keys, not a filter): j/k move, dd (or ctrl-x) kills the selected
-# session, Enter switches, q or Esc closes.
-# It's fzf rather than choose-tree so it can have that last line (and rounded corners); killing goes through
+# Cmd+j (ghostty) popup: every session, most recently used first, with its windows, folder and idle time
+# (● marks yours), a live preview of the selected one's active pane on the right, and "+ new session" last.
+# The cursor starts on your previous session (alt-tab style). Vim-style, no search line (letters are keys,
+# not a filter): j/k move, Enter switches, dd (or ctrl-x) kills, n (or Enter on "+ new session") asks a
+# name in the same popup, q or Esc closes. A first d turns the pointer into ✕ until the second d or a move.
+# It's fzf rather than choose-tree so it can have that last line and the preview; killing goes through
 # kill-session, so it avoids tmux 3.8's choose-tree crash when x kills the tree's own session
 
-# fzf calls back in for "d": the first d arms $2 (a flag file), the second kills the selected session $3
-# (not "+ new session") and redraws; moving with j/k disarms it, like vim's dd
-if [ "$1" = d ]; then
-  if [ -e "$2" ]; then
-    rm -f "$2"
-    [ "$3" = new ] || echo "execute-silent(tmux kill-session -t '$3')+reload($0 list '$4')"
-  else
-    : >"$2"
-  fi
-  exit
-fi
+dir=$(dirname "$0")
+c() { printf '\033[38;2;%d;%d;%dm' "0x${1%????}" "0x$(echo "$1" | cut -c3-4)" "0x${1#????}"; }
+acc=$(c A884E8) dim=$(c 6F6590) rst=$(printf '\033[0m')
+naming="unbind(j,k,d,n,q,ctrl-x)+show-input+disable-search+change-ghost(empty: next free number)"
+naming="$naming+change-prompt(name › )"
+
+# fzf calls back in through transform(): each prints the actions to run
+case "$1" in
+  # "d" ($2 flag file, $3 selected id, $4 your session): the first d arms the flag and shows ✕ as the
+  # pointer, the second kills the selected session and redraws; moving disarms it, like vim's dd
+  d)
+    [ "$3" = new ] && exit
+    if [ -e "$2" ]; then
+      rm -f "$2"
+      echo "execute-silent(tmux kill-session -t '$3')+reload($0 list '$4')+change-pointer(▌)"
+    else
+      : >"$2"
+      echo "change-pointer(✕)"
+    fi
+    exit ;;
+  disarm) [ -e "$2" ] && { rm -f "$2"; echo "change-pointer(▌)"; }; exit ;;
+  # Enter or n ($2 selected id, $3 client, $4 flag): with the name line open it creates the session
+  # (tmux/new-session) and closes, or says why not in the prompt; on "+ new session" it opens the name line
+  enter)
+    if [ "$FZF_INPUT_STATE" != hidden ]; then
+      if err=$("$dir/new-session" create "$3" "$FZF_QUERY"); then echo abort
+      else echo "change-prompt:$err › "; fi
+    elif [ "$2" = new ]; then
+      rm -f "$4"; echo "last+change-pointer(▌)+$naming"
+    else
+      echo accept
+    fi
+    exit ;;
+  esc)
+    if [ "$FZF_INPUT_STATE" != hidden ]; then
+      echo "hide-input+clear-query+enable-search+rebind(j,k,d,n,q,ctrl-x)"
+    else
+      echo abort
+    fi
+    exit ;;
+  # the right side: the session's active window and command, then its pane as it is now (colors kept,
+  # trailing blank lines dropped so "follow" lands on the last output)
+  preview)
+    if [ "$2" = new ]; then
+      printf '\n  %s+ new session%s\n\n  %sin %s%s\n' "$acc" "$rst" "$dim" "$(pwd | sed "s|^$HOME|~|")" "$rst"
+    else
+      tmux display -p -t "$2" "${acc}#{window_index}:#{window_name}${dim} · #{pane_current_command}${rst}"
+      echo
+      tmux capture-pane -ep -t "$2" | perl -0pe 's/\s+\z/\n/'
+    fi
+    exit ;;
+esac
 
 # the client that opened the popup and its session, passed in by the binding (from inside a popup opened by
 # run-shell, tmux would guess the most recent session instead). "list" reruns it for the reload after a kill
 [ "$1" = list ] && { current=$2; set -- list; } || { client=$1; current=$2; }
 
-# one line per session: id <tab> what's shown. \001#RRGGBB marks a color; perl turns it into a 24-bit escape.
-# Unnamed sessions show their number here (the bar shows them as a ghost)
+# one line per session: id <tab> what's shown: ● (yours), name, windows, folder (~ for home, cut from the
+# left), idle time. Unnamed sessions show their number here (the bar shows them as a ghost)
 list() {
-  tmux list-sessions -O activity -r -F "#{session_id}	$(printf '\001')#A884E8#{session_name}" |
-    awk -F '\t' -v c="$current" '{ print $0 ($1 == c ? "  \001#9677D6●" : "") }' |
-    perl -pe 's/\001#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})/sprintf("\e[38;2;%d;%d;%dm", hex $1, hex $2, hex $3)/ge; s/$/\e[0m/'
-  printf 'new\t\033[38;2;150;119;214m+ new session\033[0m\n'
+  tmux list-sessions -O activity \
+    -F '#{session_id}	#{session_name}	#{session_windows}	#{session_path}	#{session_activity}' |
+    perl -CSD -Mutf8 -ne '
+      BEGIN { $cur = shift; $now = time; $home = $ENV{HOME} }
+      sub c { sprintf "\e[38;2;%d;%d;%dm", map hex, unpack "(A2)3", shift }
+      sub fit { my ($s, $w, $left) = @_; my $n = length $s;
+        return $s . " " x ($w - $n) if $n <= $w;
+        $left ? "…" . substr($s, $n - $w + 1) : substr($s, 0, $w - 1) . "…" }
+      chomp; my ($id, $name, $win, $path, $act) = split /\t/;
+      $path =~ s/^\Q$home\E/~/;
+      my $d = $now - $act;
+      my $idle = $d < 60 ? "now" : $d < 3600 ? int($d / 60) . "m" : $d < 86400 ? int($d / 3600) . "h" : int($d / 86400) . "d";
+      printf "%s\t%s%s%s  %s%2d win   %s  %4s\e[0m\n", $id, ($id eq $cur ? c("9677D6") . "● " : "  "),
+        c("A884E8"), fit($name, 16), c("6F6590"), $win, fit($path, 18, 1), $idle;
+    ' "$current"
+  printf 'new\t  %s+ new session%s\n' "$(c 9677D6)" "$rst"
 }
 [ "$1" = list ] && { list; exit; }
 
@@ -35,17 +90,19 @@ flag=$(mktemp -u "${TMPDIR:-/tmp}/tmux-sessions-dd.XXXXXX")
 trap 'rm -f "$flag"' EXIT
 
 pick=$(list | fzf --ansi --delimiter '\t' --with-nth 2 --no-sort --layout reverse --no-info --no-separator \
-  --no-input --pointer '' \
-  --bind "j:down+execute-silent(rm -f $flag),k:up+execute-silent(rm -f $flag),q:abort" \
+  --no-input --prompt 'name › ' --pointer '▌' --highlight-line --padding 1,1,0,1 \
+  --preview "$0 preview {1}" \
+  --preview-window 'right,60%,border-left,follow,~2,<110(down,50%,border-top,follow,~2)' \
+  --bind "j:down+transform($0 disarm $flag),k:up+transform($0 disarm $flag)" \
+  --bind "down:down+transform($0 disarm $flag),up:up+transform($0 disarm $flag),q:abort" \
   --bind "d:transform($0 d $flag {1} '$current')" \
   --bind "ctrl-x:execute-silent(tmux kill-session -t {1})+reload($0 list '$current')" \
-  --color 'bg:-1,bg+:#2E1A4D,fg:#DCD3F0,fg+:#DCD3F0,hl:#E8D287,hl+:#E8D287,query:#DCD3F0,prompt:#A884E8,gutter:-1' |
+  --bind "enter:transform($0 enter {1} '$client' $flag),n:transform($0 enter new '$client' $flag)" \
+  --bind "esc:transform($0 esc)" --bind "load:pos(2)+unbind(load)" \
+  --color 'bg:-1,bg+:#2E1A4D,fg:#DCD3F0,fg+:#DCD3F0,hl:#E8D287,hl+:#E8D287,query:#DCD3F0,prompt:#A884E8' \
+  --color 'gutter:-1,pointer:#A884E8,ghost:#6F6590,border:#3D2B5E,preview-border:#3D2B5E' |
   cut -f1)
 
-case "$pick" in
-  '') ;;
-  new) # ask the name in this same popup (a second popup would make the cursor trail jump via the pane)
-    rm -f "$flag" # exec skips the EXIT trap
-    exec "$(dirname "$0")/new-session" "$client" 'new session › ' ;;
-  *) tmux switch-client -c "$client" -t "$pick" ;;
-esac
+# an if, not &&: quitting leaves $pick empty, and a non-zero exit makes the binding's run-shell print the
+# whole display-popup command over the window
+if [ -n "$pick" ]; then tmux switch-client -c "$client" -t "$pick"; fi
