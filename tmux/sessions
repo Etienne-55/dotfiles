@@ -3,15 +3,21 @@
 # (● marks yours), a live preview of the selected one's active pane on the right, and "+ new session" last.
 # The cursor starts on your previous session (alt-tab style). Vim-style, no search line (letters are keys,
 # not a filter): j/k move, Enter switches, dd (or ctrl-x) kills, n (or Enter on "+ new session") asks a
-# name in the same popup, q or Esc closes. A first d turns the pointer into ✕ until the second d or a move.
+# name in the same popup, r renames the selected one there (Enter goes back to the list with the cursor
+# still on it: --track --id-nth 1 follows the session id across the reload), q or Esc closes. A first d turns the pointer into ✕ until the second d or a move.
 # It's fzf rather than choose-tree so it can have that last line and the preview; killing goes through
 # kill-session, so it avoids tmux 3.8's choose-tree crash when x kills the tree's own session
 
 dir=$(dirname "$0")
 c() { printf '\033[38;2;%d;%d;%dm' "0x${1%????}" "0x$(echo "$1" | cut -c3-4)" "0x${1#????}"; }
 acc=$(c A884E8) dim=$(c 6F6590) rst=$(printf '\033[0m')
-naming="unbind(j,k,d,n,q,ctrl-x)+show-input+disable-search+change-ghost(empty: next free number)"
-naming="$naming+change-prompt(name › )"
+# the name line (new or rename): the list keys type letters and the cursor can't move off the row, so
+# Enter acts on the row it was opened from; Esc (or a rename) goes back to the list. The final search()
+# matters: run from transform(), clear-query alone leaves the list filtered by the typed name
+keys=j,k,d,n,r,q,ctrl-x,up,down
+input="change-pointer(▌)+unbind($keys)+show-input+disable-search"
+naming="$input+change-ghost(empty: next free number)+change-prompt(name › )"
+back="enable-search+clear-query+hide-input+rebind($keys)+search()"
 
 # fzf calls back in through transform(): each prints the actions to run
 case "$1" in
@@ -28,21 +34,39 @@ case "$1" in
     fi
     exit ;;
   disarm) [ -e "$2" ] && { rm -f "$2"; echo "change-pointer(▌)"; }; exit ;;
-  # Enter or n ($2 selected id, $3 client, $4 flag): with the name line open it creates the session
-  # (tmux/new-session) and closes, or says why not in the prompt; on "+ new session" it opens the name line
+  # "r" ($2 selected id, $3 flag): opens the name line filled with the session's name
+  r)
+    [ "$2" = new ] && exit
+    rm -f "$3"
+    echo "$input+change-ghost(empty: keep the name)+change-prompt(rename › )+change-query:$(tmux display -p -t "$2" '#{session_name}')"
+    exit ;;
+  # Enter or n ($2 selected id, $3 client, $4 flag, $5 your session): with the name line open on
+  # "+ new session" it creates the session (tmux/new-session) and closes; on a session it renames it and
+  # goes back to the list; either says why not in the prompt. On "+ new session" it opens the name line
   enter)
     if [ "$FZF_INPUT_STATE" != hidden ]; then
-      if err=$("$dir/new-session" create "$3" "$FZF_QUERY"); then echo abort
-      else echo "change-prompt:$err › "; fi
+      if [ "$2" = new ]; then
+        if err=$("$dir/new-session" create "$3" "$FZF_QUERY"); then echo abort
+        else echo "change-prompt:$err › "; fi
+      elif [ -z "$FZF_QUERY" ] || [ "$FZF_QUERY" = "$(tmux display -p -t "$2" '#{session_name}')" ]; then
+        echo "$back"
+      elif tmux has-session -t "=$FZF_QUERY" 2>/dev/null; then
+        echo "change-prompt:\"$FZF_QUERY\" already exists › "
+      elif tmux rename-session -t "$2" "$FZF_QUERY" 2>/dev/null; then
+        # back first: --track blocks the UI during the reload and the actions after it get lost
+        echo "$back+reload($0 list '$5')"
+      else
+        echo "change-prompt:can't rename to \"$FZF_QUERY\" › "
+      fi
     elif [ "$2" = new ]; then
-      rm -f "$4"; echo "last+change-pointer(▌)+$naming"
+      rm -f "$4"; echo "last+$naming"
     else
       echo accept
     fi
     exit ;;
   esc)
     if [ "$FZF_INPUT_STATE" != hidden ]; then
-      echo "hide-input+clear-query+enable-search+rebind(j,k,d,n,q,ctrl-x)"
+      echo "$back"
     else
       echo abort
     fi
@@ -90,14 +114,15 @@ flag=$(mktemp -u "${TMPDIR:-/tmp}/tmux-sessions-dd.XXXXXX")
 trap 'rm -f "$flag"' EXIT
 
 pick=$(list | fzf --ansi --delimiter '\t' --with-nth 2 --no-sort --layout reverse --no-info --no-separator \
-  --no-input --prompt 'name › ' --pointer '▌' --highlight-line --padding 1,1,0,1 \
+  --no-input --prompt 'name › ' --pointer '▌' --highlight-line --padding 1,1,0,1 --track --id-nth 1 \
   --preview "$0 preview {1}" \
   --preview-window 'right,60%,border-left,follow,~2,<110(down,50%,border-top,follow,~2)' \
   --bind "j:down+transform($0 disarm $flag),k:up+transform($0 disarm $flag)" \
   --bind "down:down+transform($0 disarm $flag),up:up+transform($0 disarm $flag),q:abort" \
   --bind "d:transform($0 d $flag {1} '$current')" \
   --bind "ctrl-x:execute-silent(tmux kill-session -t {1})+reload($0 list '$current')" \
-  --bind "enter:transform($0 enter {1} '$client' $flag),n:transform($0 enter new '$client' $flag)" \
+  --bind "enter:transform($0 enter {1} '$client' $flag '$current'),n:transform($0 enter new '$client' $flag)" \
+  --bind "r:transform($0 r {1} $flag)" \
   --bind "esc:transform($0 esc)" --bind "load:pos(2)+unbind(load)" \
   --color 'bg:-1,bg+:#2E1A4D,fg:#DCD3F0,fg+:#DCD3F0,hl:#E8D287,hl+:#E8D287,query:#DCD3F0,prompt:#A884E8' \
   --color 'gutter:-1,pointer:#A884E8,ghost:#6F6590,border:#3D2B5E,preview-border:#3D2B5E' |

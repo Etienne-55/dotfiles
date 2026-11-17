@@ -207,10 +207,14 @@ keymap.set("n", "<leader>rr", function()
   vim.cmd.terminal(cmd .. " " .. file)
   run_buf = vim.api.nvim_get_current_buf()
   -- focus stays on the output: q closes it and lands back in the code
-  keymap.set("n", "q", function()
+  local function close()
     vim.api.nvim_buf_delete(run_buf, { force = true })
     if vim.api.nvim_win_is_valid(code_win) then vim.api.nvim_set_current_win(code_win) end
-  end, { buffer = run_buf, nowait = true, desc = "Close run output" })
+  end
+  keymap.set("n", "q", close, { buffer = run_buf, nowait = true, desc = "Close run output" })
+  -- typing input to the program (i) leaves you in terminal mode, where q is just a letter
+  keymap.set("t", "<Esc>", [[<C-\><C-n>]], { buffer = run_buf, desc = "Leave terminal mode" })
+  keymap.set("t", "<C-q>", close, { buffer = run_buf, desc = "Close run output" })
 end, { desc = "Run current file in a split" })
 
 -- gd (Telescope lsp_definitions) pushes onto the tagstack, so <C-t> pops exactly one gd

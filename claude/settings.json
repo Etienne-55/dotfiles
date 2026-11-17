@@ -1,10 +1,6 @@
 {
-  "model": "opus",
   "cleanupPeriodDays": 30,
-  "statusLine": {
-    "type": "command",
-    "command": "~/dotfiles/claude/statusline.sh"
-  },
+  "model": "opus",
   "hooks": {
     "Stop": [
       {
@@ -47,6 +43,10 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/dotfiles/claude/statusline.sh"
+  },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "i-have-adhd@i-have-adhd": true
@@ -71,6 +71,9 @@
       "effortLevel": "high"
     },
     "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
       "effortLevel": "high"
     }
   },

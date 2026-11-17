@@ -1,31 +1,3 @@
-# ghostty's ghost (+boo) after 20 minutes idle at the prompt. It needs 100+ columns: in a
-# narrower window the font goes 3 steps down (like Ctrl+- x3) through ghostty's
-# AppleScript, then back to normal after q. Above the instant prompt: it's interactive.
-if [[ $TERM_PROGRAM == ghostty && -z $TMUX ]]; then
-  _boo() {
-    # wide enough already: no font change, so no zoom back after q
-    if (( ${$(stty size </dev/tty)[2]} >= 100 )); then
-      ghostty +boo
-      return
-    fi
-    local term='focused terminal of selected tab of front window'
-    osascript -e "tell application \"Ghostty\" to perform action \"decrease_font_size:3\" on $term" >/dev/null 2>&1 || return
-    sleep 0.3 # let the window re-layout before boo measures it
-    ghostty +boo
-    osascript -e "tell application \"Ghostty\" to perform action \"reset_font_size\" on $term" >/dev/null 2>&1
-  }
-
-  # TMOUT only counts while the prompt waits for a key, never while nvim or another
-  # command runs. The trap must exist before TMOUT is set: without one, zsh exits
-  # on timeout.
-  TRAPALRM() {
-    zle && zle -I
-    _boo
-    zle && zle clear-screen
-  }
-  TMOUT=1200
-fi
-
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
